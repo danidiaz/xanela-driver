@@ -35,4 +35,34 @@
       <scope>test</scope>
     </dependency>
   </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifestEntries>
+              <Premain-Class>info.danidiaz.xanela.driver.Driver</Premain-Class>
+            </manifestEntries>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <configuration>
+          <includeScope>runtime</includeScope>
+        </configuration>
+        <executions>
+          <execution>
+              <phase>package</phase>
+              <goals>
+                  <goal>copy-dependencies</goal>
+              </goals>
+          </execution>
+        </executions>
+      </plugin>      
+    </plugins>
+  </build>
 </project>
