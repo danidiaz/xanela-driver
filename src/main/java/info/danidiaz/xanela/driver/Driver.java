@@ -8,7 +8,7 @@ import org.msgpack.rpc.loop.EventLoop;
 public class Driver 
 {
     public static void premain(String agentArgs) {
-        System.out.println( "Hi, I'm the agent!" );
+        System.out.println( "Hi, I'm the agent, started with options: " + agentArgs );
         
         try {            
             final EventLoop loop = EventLoop.defaultEventLoop();
