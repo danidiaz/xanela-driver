@@ -51,15 +51,15 @@
       </plugin>
       <plugin>
         <artifactId>maven-dependency-plugin</artifactId>
-        <configuration>
-          <includeScope>runtime</includeScope>
-        </configuration>
         <executions>
           <execution>
               <phase>package</phase>
               <goals>
                   <goal>copy-dependencies</goal>
               </goals>
+              <configuration>
+                <includeScope>runtime</includeScope>
+              </configuration>
           </execution>
         </executions>
       </plugin>      
