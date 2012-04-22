@@ -21,7 +21,7 @@ public class Driver
             svr.serve(new Driver());
 
             int port = DEFAULT_PORT;
-            if (!agentArgs.isEmpty()) {
+            if (agentArgs!=null && !agentArgs.isEmpty()) {
                 port = Integer.decode(agentArgs);
             } 
             svr.listen(port);      
