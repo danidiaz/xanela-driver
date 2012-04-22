@@ -26,7 +26,7 @@ public class Driver
             } 
             svr.listen(port);      
                         
-            new Thread(new Runnable() {
+            Thread serverThread = new Thread(new Runnable() {
                 
                 @Override
                 public void run() {
@@ -37,7 +37,9 @@ public class Driver
                     }
                     
                 }
-            }).start();
+            });
+            serverThread.setDaemon(true);
+            serverThread.start();
             System.out.println("Xanela server started at port " + port);
         } catch (NumberFormatException e) {
             e.printStackTrace();
