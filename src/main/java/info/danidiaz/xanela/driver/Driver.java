@@ -58,8 +58,13 @@ public class Driver
     static class XanelaObject implements MessagePackable {
 
         @Override
-        public void messagePack(Packer packer) throws IOException {            
-            packer.pack("fim fam fum");                                    
+        public void messagePack(Packer packer) throws IOException { 
+            packer.packArray(2);
+            packer.pack("fim fam fum");
+            packer.packArray(3);
+            packer.pack((int)1);
+            packer.pack((int)2);
+            packer.pack((int)3);
         }
         
     }
