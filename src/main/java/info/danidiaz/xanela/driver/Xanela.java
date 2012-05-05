@@ -4,6 +4,8 @@ import java.awt.Window;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
+import javax.swing.JDialog;
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import org.msgpack.MessagePackable;
@@ -30,19 +32,19 @@ public class Xanela implements MessagePackable {
                         for (int i=0;i<warray.length;i++) {
                             Window w = warray[i];
                             if (warray[i].isVisible()) {
-                                packer.packArray(3);
-                                packer.pack(w.getClass().getName());
+                                String title = "";
+                                if (w instanceof JFrame) {
+                                    title = ((JFrame)w).getTitle();
+                                } else if (w instanceof JDialog) {
+                                    title = ((JDialog)w).getTitle();                                    
+                                }
+                                packer.packArray(2);
+                                packer.pack(title);
+                                packer.packArray(2);
                                 packer.pack((int)w.getHeight());
                                 packer.pack((int)w.getWidth());
                             }
-                        }                        
-                        
-/*                        packer.packArray(2);
-                        packer.pack("fim fam fum");                            
-                        packer.packArray(3);
-                        packer.pack((int)1);
-                        packer.pack((int)2);
-                        packer.pack((int)3);*/                                                    
+                        }                                                                                                   
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
