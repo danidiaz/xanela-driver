@@ -6,9 +6,12 @@ import java.awt.Window;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.RootPaneContainer;
 import javax.swing.SwingUtilities;
 
@@ -77,7 +80,7 @@ public class Xanela implements MessagePackable {
     private static void writeComponent(Packer packer, Component c, Component coordBase) throws IOException {
         JComponent jc = (JComponent) c;
         
-        packer.packArray(4);
+        packer.packArray(5);
         
         packer.pack(c.getClass().getName());
 
@@ -90,6 +93,8 @@ public class Xanela implements MessagePackable {
         packer.pack((int)c.getHeight());
         packer.pack((int)c.getWidth());
         
+        writeComponentType(packer, jc, coordBase);
+        
         Component children[] = jc.getComponents();
         packer.packArray(countVisible(children));
         for (int i=0;i<children.length;i++) {
@@ -97,6 +102,24 @@ public class Xanela implements MessagePackable {
                 writeComponent(packer, children[i],coordBase);
             }
         }
+    }
+    
+    private static void writeComponentType(Packer packer, JComponent c, Component coordBase) throws IOException {
+        packer.packArray(2);
+        if (c instanceof JPanel) {
+            packer.pack((int)1);
+            packer.pack("foo");
+        } else if (c instanceof JButton) {
+            packer.pack((int)2);
+            packer.pack(((JButton)c).getText());
+        } else if (c instanceof JTextField) {
+            packer.pack((int)3);
+            packer.pack(((JTextField)c).getText());
+        } else {
+            packer.pack((int)4);
+            packer.pack("foo");
+        }
+            
     }
 
 }
