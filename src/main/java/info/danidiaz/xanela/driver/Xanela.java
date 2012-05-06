@@ -1,6 +1,7 @@
 package info.danidiaz.xanela.driver;
 
 import java.awt.Component;
+import java.awt.Point;
 import java.awt.Window;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -66,24 +67,24 @@ public class Xanela implements MessagePackable {
                 packer.pack((int)w.getWidth());
                 
                 RootPaneContainer rpc = (RootPaneContainer)w;
-                writeComponent(packer, rpc.getContentPane());
-                
-                if (w instanceof JFrame) {
-                    System.out.println(((JFrame)w).getContentPane().getClass().getName());
-                } else if (w instanceof JDialog) {
-                    System.out.println(((JDialog)w).getContentPane().getClass().getName());                                   
-                }                
+                writeComponent(packer, rpc.getContentPane(),w);
+                               
                 writeWindowArray(packer, w.getOwnedWindows());
             }        
         }
     }
     
-    private static void writeComponent(Packer packer, Component c) throws IOException {
+    private static void writeComponent(Packer packer, Component c, Component coordBase) throws IOException {
         JComponent jc = (JComponent) c;
         
-        packer.packArray(3);
+        packer.packArray(4);
         
         packer.pack(c.getClass().getName());
+
+        packer.packArray(2);
+        Point posInWindow = SwingUtilities.convertPoint(c, c.getX(), c.getY(), coordBase);
+        packer.pack((int)posInWindow.getX());
+        packer.pack((int)posInWindow.getY());
         
         packer.packArray(2);
         packer.pack((int)c.getHeight());
@@ -93,7 +94,7 @@ public class Xanela implements MessagePackable {
         packer.packArray(countVisible(children));
         for (int i=0;i<children.length;i++) {
             if (children[i].isVisible()) {
-                writeComponent(packer, children[i]);
+                writeComponent(packer, children[i],coordBase);
             }
         }
     }
