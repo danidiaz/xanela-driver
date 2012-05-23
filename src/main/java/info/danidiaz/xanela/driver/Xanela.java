@@ -5,6 +5,8 @@ import java.awt.Point;
 import java.awt.Window;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -19,6 +21,9 @@ import org.msgpack.MessagePackable;
 import org.msgpack.Packer;
 
 public class Xanela implements MessagePackable {
+    
+    private List<Component> componentArray = new ArrayList<Component>();
+    
     @Override
     public void messagePack(final Packer packer) throws IOException {
         
@@ -52,7 +57,7 @@ public class Xanela implements MessagePackable {
         return visibleCount;
     }
     
-    private static void writeWindowArray(Packer packer, Window warray[]) throws IOException {
+    private void writeWindowArray(Packer packer, Window warray[]) throws IOException {
         packer.packArray(countVisible(warray));
         for (int i=0;i<warray.length;i++) {
             Window w = warray[i];
@@ -77,8 +82,11 @@ public class Xanela implements MessagePackable {
         }
     }
     
-    private static void writeComponent(Packer packer, Component c, Component coordBase) throws IOException {
+    private void writeComponent(Packer packer, Component c, Component coordBase) throws IOException {
         JComponent jc = (JComponent) c;
+        
+        int componentId = componentArray.size();
+        componentArray.add(c);
         
         packer.packArray(5);
         
@@ -122,4 +130,21 @@ public class Xanela implements MessagePackable {
             
     }
 
+    public void click(int buttonId) {
+        try {
+            final JButton button = (JButton)componentArray.get(buttonId);
+            
+            SwingUtilities.invokeAndWait(new Runnable() {
+                
+                @Override
+                public void run() {
+                    button.doClick();
+                }
+            });
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }                    
+    }
 }

@@ -6,6 +6,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import javax.swing.SwingUtilities;
 
+import org.msgpack.MessagePackObject;
 import org.msgpack.MessagePackable;
 import org.msgpack.MessageTypeException;
 import org.msgpack.Packer;
@@ -58,8 +59,21 @@ public class Driver implements Dispatcher
             
     }
 
+    private Xanela lastXanela;
+    
     @Override
     public void dispatch(Request request) throws Exception {
-        request.sendResult(new Xanela());            
+        
+        String methodName = request.getMethodName();
+        if (methodName.equals("get")) {
+            Xanela xanela = new Xanela();
+            request.sendResult(xanela);
+            lastXanela = xanela;
+            
+        } else if (methodName.equals("click")) {
+            MessagePackObject args = request.getArguments();
+            int buttonId = args.asInt();
+            lastXanela.click(buttonId);                    
+        }
     } 
 }
