@@ -65,13 +65,15 @@ public class Xanela implements MessagePackable {
         for (int i=0;i<warray.length;i++) {
             Window w = warray[i];
             if (warray[i].isVisible()) {
+                packer.packArray(2);
+                
                 String title = "";
                 if (w instanceof JFrame) {
                     title = ((JFrame)w).getTitle();
                 } else if (w instanceof JDialog) {
                     title = ((JDialog)w).getTitle();                                    
                 }
-                packer.packArray(4);
+                packer.packArray(3);
                 packer.pack(title);
                 packer.packArray(2);
                 packer.pack((int)w.getHeight());
@@ -90,8 +92,18 @@ public class Xanela implements MessagePackable {
         int componentId = componentArray.size();
         componentArray.add(c);
         
+        packer.packArray(2);
         packer.packArray(7);
 
+        packer.packArray(2);
+        Point posInWindow = SwingUtilities.convertPoint(c, c.getX(), c.getY(), coordBase);
+        packer.pack((int)posInWindow.getX());
+        packer.pack((int)posInWindow.getY());
+        
+        packer.packArray(2);
+        packer.pack((int)c.getHeight());
+        packer.pack((int)c.getWidth());
+        
         writePotentiallyNullString(packer,c.getName());
         writePotentiallyNullString(packer,c.getToolTipText());
         
@@ -105,14 +117,7 @@ public class Xanela implements MessagePackable {
             packer.packNil();
         }
 
-        packer.packArray(2);
-        Point posInWindow = SwingUtilities.convertPoint(c, c.getX(), c.getY(), coordBase);
-        packer.pack((int)posInWindow.getX());
-        packer.pack((int)posInWindow.getY());
-        
-        packer.packArray(2);
-        packer.pack((int)c.getHeight());
-        packer.pack((int)c.getWidth());
+        packer.pack(c.isEnabled());        
         
         writeComponentType(packer, c, coordBase);
         
