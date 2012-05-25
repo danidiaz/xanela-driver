@@ -8,14 +8,17 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.RootPaneContainer;
 import javax.swing.SwingUtilities;
+import javax.swing.text.JTextComponent;
 
 import org.msgpack.MessagePackable;
 import org.msgpack.Packer;
@@ -75,22 +78,32 @@ public class Xanela implements MessagePackable {
                 packer.pack((int)w.getWidth());
                 
                 RootPaneContainer rpc = (RootPaneContainer)w;
-                writeComponent(packer, rpc.getContentPane(),w);
+                writeComponent(packer, (JComponent) rpc.getContentPane(),w);
                                
                 writeWindowArray(packer, w.getOwnedWindows());
             }        
         }
     }
     
-    private void writeComponent(Packer packer, Component c, Component coordBase) throws IOException {
-        JComponent jc = (JComponent) c;
+    private void writeComponent(Packer packer, JComponent c, Component coordBase) throws IOException {
         
         int componentId = componentArray.size();
         componentArray.add(c);
         
-        packer.packArray(5);
+        packer.packArray(7);
+
+        writePotentiallyNullString(packer,c.getName());
+        writePotentiallyNullString(packer,c.getToolTipText());
         
-        packer.pack(c.getClass().getName());
+        if (c instanceof AbstractButton) {
+            writePotentiallyNullString(packer,((AbstractButton)c).getText());
+        } else if (c instanceof JLabel) {
+            writePotentiallyNullString(packer,((JLabel)c).getText());
+        } else if (c instanceof JTextComponent) {
+            writePotentiallyNullString(packer,((JTextComponent)c).getText());
+        } else {
+            packer.packNil();
+        }
 
         packer.packArray(2);
         Point posInWindow = SwingUtilities.convertPoint(c, c.getX(), c.getY(), coordBase);
@@ -101,13 +114,13 @@ public class Xanela implements MessagePackable {
         packer.pack((int)c.getHeight());
         packer.pack((int)c.getWidth());
         
-        writeComponentType(packer, jc, coordBase);
+        writeComponentType(packer, c, coordBase);
         
-        Component children[] = jc.getComponents();
+        Component children[] = c.getComponents();
         packer.packArray(countVisible(children));
         for (int i=0;i<children.length;i++) {
             if (children[i].isVisible()) {
-                writeComponent(packer, children[i],coordBase);
+                writeComponent(packer, (JComponent)children[i],coordBase);
             }
         }
     }
@@ -128,6 +141,14 @@ public class Xanela implements MessagePackable {
             packer.pack("foo");
         }
             
+    }
+    
+    private static void writePotentiallyNullString(Packer packer, String s) throws IOException {
+        if (s==null) {
+            packer.packNil();
+        } else {
+            packer.pack(s);
+        }
     }
 
     public void click(int buttonId) {
