@@ -1,53 +1,50 @@
 package info.danidiaz.xanela.driver;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 import javax.swing.SwingUtilities;
 
-import org.msgpack.MessagePackObject;
+import org.msgpack.MessagePack;
 import org.msgpack.MessagePackable;
 import org.msgpack.MessageTypeException;
-import org.msgpack.Packer;
-import org.msgpack.rpc.Request;
-import org.msgpack.rpc.Server;
-import org.msgpack.rpc.dispatcher.Dispatcher;
-import org.msgpack.rpc.loop.EventLoop;
+import org.msgpack.packer.MessagePackPacker;
+import org.msgpack.packer.Packer;
+import org.msgpack.unpacker.MessagePackUnpacker;
+import org.msgpack.unpacker.Unpacker;
 
-public class Driver implements Dispatcher
+public class Driver implements Runnable
 {
     
     // http://www.iana.org/assignments/service-names-port-numbers/service-names-port-numbers.xml
-    private static int DEFAULT_PORT = 26060;
+    private final static int DEFAULT_PORT = 26060;
+    
+    private final ServerSocket serverSocket;
+    private final MessagePack messagePack;
+    
+    private Xanela lastXanela; 
     
     // http://docs.oracle.com/javase/6/docs/api/java/lang/instrument/package-summary.html
     public static void premain(String agentArgs) {
         System.out.println( "Hi, I'm the agent, started with options: " + agentArgs );
                 
-        try {            
-            final EventLoop loop = EventLoop.defaultEventLoop();
-            final Server svr = new Server();
-            svr.serve(new Driver());
-
+        try {
             int port = DEFAULT_PORT;
             if (agentArgs!=null && !agentArgs.isEmpty()) {
                 port = Integer.decode(agentArgs);
-            } 
-            svr.listen(port);      
+            }
+            
+            final ServerSocket serverSocket = new ServerSocket(DEFAULT_PORT);
+            MessagePack messagePack = new MessagePack(); 
                         
-            Thread serverThread = new Thread(new Runnable() {
-                
-                @Override
-                public void run() {
-                    try {           
-                        loop.join();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    
-                }
-            });
+            Thread serverThread = new Thread(new Driver(serverSocket,messagePack));
             serverThread.setDaemon(true);
             serverThread.start();
             System.out.println("Xanela server started at port " + port);
@@ -59,21 +56,58 @@ public class Driver implements Dispatcher
             
     }
 
-    private Xanela lastXanela;
-    
+    public Driver(ServerSocket serverSocket, MessagePack messagePack) {
+        super();
+        this.serverSocket = serverSocket;
+        this.messagePack = messagePack;
+    }
+
     @Override
-    public void dispatch(Request request) throws Exception {
-        
-        String methodName = request.getMethodName();
-        if (methodName.equals("get")) {
-            Xanela xanela = new Xanela();
-            request.sendResult(xanela);
-            lastXanela = xanela;
-            
-        } else if (methodName.equals("click")) {
-            MessagePackObject args = request.getArguments();
-            int buttonId = args.asInt();
-            lastXanela.click(buttonId);                    
-        }
+    public void run() {
+        try {
+            boolean shutdownServer = false;
+            while (!shutdownServer) {
+                Socket  clientSocket = serverSocket.accept();
+                
+                InputStream sistream =  new BufferedInputStream(clientSocket.getInputStream());
+                Unpacker unpacker = new MessagePackUnpacker(messagePack,sistream);
+                
+                OutputStream sostream =  new BufferedOutputStream(clientSocket.getOutputStream());
+                Packer packer = new MessagePackPacker(messagePack,sostream);
+               
+                try {
+                    boolean closeConnection = false;
+                    while (!closeConnection) {
+                        String methodName = unpacker.readString();                
+                        if (methodName.equals("get")) {
+                            Xanela xanela = new Xanela();
+                            xanela.buildAndWrite(packer);
+                            lastXanela = xanela;     
+                        } else if (methodName.equals("click")) {
+                            int buttonId = unpacker.readInt();
+                            lastXanela.click(buttonId);
+                            
+                        } else if (methodName.equals("close")) {
+                            closeConnection = true;
+                        } else if (methodName.equals("shutdown")) {
+                            closeConnection = true;
+                            shutdownServer = true;
+                        }
+                        sostream.flush();
+                    }
+                } catch (IOException ioe) {
+                    ioe.printStackTrace();    
+                } catch (MessageTypeException msgte) {                
+                    msgte.printStackTrace();
+                } finally {
+                    sistream.close();
+                    sostream.close();
+                    clientSocket.close();
+                }
+            }
+            serverSocket.close();
+        } catch (IOException ioe) {
+            ioe.printStackTrace();    
+        }  
     } 
 }

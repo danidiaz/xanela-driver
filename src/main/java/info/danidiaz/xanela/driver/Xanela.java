@@ -21,14 +21,13 @@ import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import org.msgpack.MessagePackable;
-import org.msgpack.Packer;
+import org.msgpack.packer.Packer;
 
-public class Xanela implements MessagePackable {
+public class Xanela {
     
     private List<Component> componentArray = new ArrayList<Component>();
     
-    @Override
-    public void messagePack(final Packer packer) throws IOException {
+    public void buildAndWrite(final Packer packer) throws IOException {
         
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
@@ -61,48 +60,59 @@ public class Xanela implements MessagePackable {
     }
     
     private void writeWindowArray(Packer packer, Window warray[]) throws IOException {
-        packer.packArray(countVisible(warray));
+        packer.writeArrayBegin(countVisible(warray));
         for (int i=0;i<warray.length;i++) {
             Window w = warray[i];
-            if (warray[i].isVisible()) {
-                packer.packArray(2);
-                
-                String title = "";
-                if (w instanceof JFrame) {
-                    title = ((JFrame)w).getTitle();
-                } else if (w instanceof JDialog) {
-                    title = ((JDialog)w).getTitle();                                    
-                }
-                packer.packArray(3);
-                packer.pack(title);
-                packer.packArray(2);
-                packer.pack((int)w.getHeight());
-                packer.pack((int)w.getWidth());
-                
-                RootPaneContainer rpc = (RootPaneContainer)w;
-                writeComponent(packer, (JComponent) rpc.getContentPane(),w);
-                               
-                writeWindowArray(packer, w.getOwnedWindows());
+            if (w.isVisible()) {
+                writeWindow(packer,w);
             }        
         }
+        packer.writeArrayEnd();
     }
+    
+    private void writeWindow(Packer packer, Window w) throws IOException {
+        String title = "";
+        if (w instanceof JFrame) {
+            title = ((JFrame)w).getTitle();
+        } else if (w instanceof JDialog) {
+            title = ((JDialog)w).getTitle();                                    
+        }
+
+        packer.write(title);
+        packer.writeArrayBegin(2);
+        {
+            packer.write((int)w.getHeight());
+            packer.write((int)w.getWidth());
+        }
+        packer.writeArrayEnd();
+
+        
+        RootPaneContainer rpc = (RootPaneContainer)w;
+        writeComponent(packer, (JComponent) rpc.getContentPane(),w);                                                               
+        
+        writeWindowArray(packer, w.getOwnedWindows());
+    }
+    
     
     private void writeComponent(Packer packer, JComponent c, Component coordBase) throws IOException {
         
         int componentId = componentArray.size();
         componentArray.add(c);
         
-        packer.packArray(2);
-        packer.packArray(7);
-
-        packer.packArray(2);
-        Point posInWindow = SwingUtilities.convertPoint(c, c.getX(), c.getY(), coordBase);
-        packer.pack((int)posInWindow.getX());
-        packer.pack((int)posInWindow.getY());
+        packer.writeArrayBegin(2);
+        {
+            Point posInWindow = SwingUtilities.convertPoint(c, c.getX(), c.getY(), coordBase);
+            packer.write((int)posInWindow.getX());
+            packer.write((int)posInWindow.getY());
+        }
+        packer.writeArrayEnd();
         
-        packer.packArray(2);
-        packer.pack((int)c.getHeight());
-        packer.pack((int)c.getWidth());
+        packer.writeArrayBegin(2);
+        {
+            packer.write((int)c.getHeight());
+            packer.write((int)c.getWidth());
+        }
+        packer.writeArrayEnd();
         
         writePotentiallyNullString(packer,c.getName());
         writePotentiallyNullString(packer,c.getToolTipText());
@@ -114,45 +124,43 @@ public class Xanela implements MessagePackable {
         } else if (c instanceof JTextComponent) {
             writePotentiallyNullString(packer,((JTextComponent)c).getText());
         } else {
-            packer.packNil();
+            packer.writeNil();
         }
 
-        packer.pack(c.isEnabled());        
+        packer.write(c.isEnabled());        
         
         writeComponentType(packer, c, coordBase);
         
         Component children[] = c.getComponents();
-        packer.packArray(countVisible(children));
+        packer.writeArrayBegin(countVisible(children));
         for (int i=0;i<children.length;i++) {
             if (children[i].isVisible()) {
                 writeComponent(packer, (JComponent)children[i],coordBase);
             }
         }
+        packer.writeArrayEnd();
     }
     
     private static void writeComponentType(Packer packer, JComponent c, Component coordBase) throws IOException {
-        packer.packArray(2);
         if (c instanceof JPanel) {
-            packer.pack((int)1);
-            packer.pack("foo");
+            packer.write((int)1);
         } else if (c instanceof JButton) {
-            packer.pack((int)2);
-            packer.pack(((JButton)c).getText());
+            packer.write((int)2);
+            packer.write(((JButton)c).getText());
         } else if (c instanceof JTextField) {
-            packer.pack((int)3);
-            packer.pack(((JTextField)c).getText());
+            packer.write((int)3);
+            packer.write(((JTextField)c).getText());
         } else {
-            packer.pack((int)4);
-            packer.pack("foo");
+            packer.write((int)4);
+            packer.write("foo");
         }
-            
     }
     
     private static void writePotentiallyNullString(Packer packer, String s) throws IOException {
         if (s==null) {
-            packer.packNil();
+            packer.writeNil();
         } else {
-            packer.pack(s);
+            packer.write(s);
         }
     }
 
