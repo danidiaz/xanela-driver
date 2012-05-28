@@ -76,25 +76,19 @@ public class Driver implements Runnable
                 Packer packer = new MessagePackPacker(messagePack,sostream);
                
                 try {
-                    boolean closeConnection = false;
-                    while (!closeConnection) {
-                        String methodName = unpacker.readString();                
-                        if (methodName.equals("get")) {
-                            Xanela xanela = new Xanela();
-                            xanela.buildAndWrite(packer);
-                            lastXanela = xanela;     
-                        } else if (methodName.equals("click")) {
-                            int buttonId = unpacker.readInt();
-                            lastXanela.click(buttonId);
+                    String methodName = unpacker.readString();                
+                    if (methodName.equals("get")) {
+                        Xanela xanela = new Xanela();
+                        xanela.buildAndWrite(packer);
+                        lastXanela = xanela;     
+                    } else if (methodName.equals("click")) {
+                        int buttonId = unpacker.readInt();
+                        lastXanela.click(buttonId);
                             
-                        } else if (methodName.equals("close")) {
-                            closeConnection = true;
-                        } else if (methodName.equals("shutdown")) {
-                            closeConnection = true;
-                            shutdownServer = true;
-                        }
-                        sostream.flush();
+                    } else if (methodName.equals("shutdown")) {
+                        shutdownServer = true;
                     }
+                    sostream.flush();
                 } catch (IOException ioe) {
                     ioe.printStackTrace();    
                 } catch (MessageTypeException msgte) {                
