@@ -129,7 +129,7 @@ public class Xanela {
 
         packer.write(c.isEnabled());        
         
-        writeComponentType(packer, c, coordBase);
+        writeComponentType(packer, componentId, c, coordBase);
         
         Component children[] = c.getComponents();
         packer.writeArrayBegin(countVisible(children));
@@ -141,12 +141,17 @@ public class Xanela {
         packer.writeArrayEnd();
     }
     
-    private static void writeComponentType(Packer packer, JComponent c, Component coordBase) throws IOException {
+    private static void writeComponentType( Packer packer, 
+                int componentId,
+                JComponent c, 
+                Component coordBase 
+            ) throws IOException 
+    {
         if (c instanceof JPanel) {
             packer.write((int)1);
         } else if (c instanceof JButton) {
             packer.write((int)2);
-            packer.write(((JButton)c).getText());
+            packer.write((int)componentId);
         } else if (c instanceof JTextField) {
             packer.write((int)3);
             packer.write(((JTextField)c).getText());
