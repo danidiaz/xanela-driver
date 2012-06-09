@@ -16,6 +16,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.RootPaneContainer;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
@@ -149,15 +150,20 @@ public class Xanela {
     {
         if (c instanceof JPanel) {
             packer.write((int)1);
-        } else if (c instanceof JButton) {
+        } else if (c instanceof AbstractButton) {
             packer.write((int)2);
             packer.write((int)componentId);
+            if (c instanceof JToggleButton) {
+                packer.write(((JToggleButton)c).isSelected());
+            } else {
+                packer.writeNil();
+            }
         } else if (c instanceof JTextField) {
             packer.write((int)3);
             packer.write(((JTextField)c).getText());
         } else {
             packer.write((int)4);
-            packer.write("foo");
+            packer.write(c.getClass().getName());
         }
     }
     
@@ -170,20 +176,15 @@ public class Xanela {
     }
 
     public void click(int buttonId) {
-        try {
-            final JButton button = (JButton)componentArray.get(buttonId);
+
+        final JButton button = (JButton)componentArray.get(buttonId);
+        
+        SwingUtilities.invokeLater(new Runnable() {
             
-            SwingUtilities.invokeAndWait(new Runnable() {
-                
-                @Override
-                public void run() {
-                    button.doClick();
-                }
-            });
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        }                    
+            @Override
+            public void run() {
+                button.doClick();
+            }
+        });                 
     }
 }
