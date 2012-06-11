@@ -160,9 +160,17 @@ public class Xanela {
             }
         } else if (c instanceof JTextField) {
             packer.write((int)3);
-            packer.write(((JTextField)c).getText());
-        } else {
+            JTextField textField = (JTextField) c;
+            if (textField.isEditable()) {
+                packer.write((int)componentId);
+            } else {
+                packer.writeNil();
+            }
+        } else if (c instanceof JLabel) {
+            
             packer.write((int)4);
+        } else {
+            packer.write((int)77);
             packer.write(c.getClass().getName());
         }
     }
@@ -187,4 +195,18 @@ public class Xanela {
             }
         });                 
     }
+    
+    public void setTextField(int cId, final String text) {
+
+        final JTextField textField = (JTextField)componentArray.get(cId);
+        
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {
+                textField.setText(text);
+            }
+        });                 
+    }
+
 }

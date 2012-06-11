@@ -85,6 +85,11 @@ public class Driver implements Runnable
                         int buttonId = unpacker.readInt();
                         lastXanela.click(buttonId);
                             
+                    } else if (methodName.equals("setTextField")) {
+                        int buttonId = unpacker.readInt();
+                        String text = unpacker.readString();
+                        lastXanela.setTextField(buttonId,text);
+                            
                     } else if (methodName.equals("shutdown")) {
                         shutdownServer = true;
                     }
