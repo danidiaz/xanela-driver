@@ -271,7 +271,7 @@ public class Xanela {
         });                 
     }
 
-    public void clickMenu(int menuPath[]) {
+    public void clickMenu(final int menuPath[]) {       
         for (int i=0;i<menuPath.length;i++) {
             final JMenuItem menuItem = menuArray.get(menuPath[i]);
             
@@ -282,5 +282,6 @@ public class Xanela {
                 }                       
             });
         }
+
     }
 }
