@@ -90,6 +90,16 @@ public class Driver implements Runnable
                         String text = unpacker.readString();
                         lastXanela.setTextField(buttonId,text);
                             
+                    } else if (methodName.equals("clickMenu")) {
+                        int menuPathCount = unpacker.readArrayBegin();
+                        int menuPath[] = new int[menuPathCount];
+                        for (int i=0;i<menuPathCount;i++) {
+                            menuPath[i]=unpacker.readInt();
+                        }
+                        unpacker.readArrayEnd();
+
+                        lastXanela.clickMenu(menuPath);
+                            
                     } else if (methodName.equals("shutdown")) {
                         shutdownServer = true;
                     }
