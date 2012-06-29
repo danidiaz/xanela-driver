@@ -29,6 +29,7 @@ public class Driver implements Runnable
     private final ServerSocket serverSocket;
     private final MessagePack messagePack;
     
+    private int lastXanelaId = 0;
     private Xanela lastXanela; 
     
     // http://docs.oracle.com/javase/6/docs/api/java/lang/instrument/package-summary.html
@@ -78,19 +79,23 @@ public class Driver implements Runnable
                 try {
                     String methodName = unpacker.readString();                
                     if (methodName.equals("get")) {
+                        lastXanelaId++;
                         Xanela xanela = new Xanela();
-                        xanela.buildAndWrite(packer);
+                        xanela.buildAndWrite(lastXanelaId,packer);
                         lastXanela = xanela;     
                     } else if (methodName.equals("click")) {
+                        int xanelaId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
                         lastXanela.click(buttonId);
                             
                     } else if (methodName.equals("setTextField")) {
+                        int xanelaId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
                         String text = unpacker.readString();
                         lastXanela.setTextField(buttonId,text);
                             
                     } else if (methodName.equals("clickMenu")) {
+                        int xanelaId = unpacker.readInt();
                         int menuPathCount = unpacker.readArrayBegin();
                         int menuPath[] = new int[menuPathCount];
                         for (int i=0;i<menuPathCount;i++) {

@@ -35,7 +35,7 @@ public class Xanela {
     private List<Component> componentArray = new ArrayList<Component>();
     private List<JMenuItem> menuArray = new ArrayList<JMenuItem>();
     
-    public void buildAndWrite(final Packer packer) throws IOException {
+    public void buildAndWrite(final int xid, final Packer packer) throws IOException {
         
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
@@ -44,7 +44,7 @@ public class Xanela {
                 public void run() {
                     try {
                         Window warray[] = Window.getOwnerlessWindows();
-                        writeWindowArray(packer, warray);
+                        writeWindowArray(xid, packer, warray);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -67,18 +67,21 @@ public class Xanela {
         return visibleCount;
     }
     
-    private void writeWindowArray(Packer packer, Window warray[]) throws IOException {
+    private void writeWindowArray(int xid, Packer packer, Window warray[]) throws IOException {
         packer.writeArrayBegin(countShowing(warray));
         for (int i=0;i<warray.length;i++) {
             Window w = warray[i];
             if (w.isShowing()) {
-                writeWindow(packer,w);
+                writeWindow(xid, packer,w);
             }        
         }
         packer.writeArrayEnd();
     }
     
-    private void writeWindow(Packer packer, Window w) throws IOException {
+    private void writeWindow(int xid, Packer packer, Window w) throws IOException {
+        
+        packer.write((int)xid);
+        
         String title = "";
         if (w instanceof JFrame) {
             title = ((JFrame)w).getTitle();
@@ -103,29 +106,32 @@ public class Xanela {
         if (menubar==null) {
             packer.writeNil();
         } else {
-            writeMenuBar(packer, menubar);
+            writeMenuBar(xid, packer, menubar);
         }
         
         RootPaneContainer rpc = (RootPaneContainer)w;
-        writeComponent(packer, (JComponent) rpc.getContentPane(),w);                                                               
+        writeComponent(xid, packer, (JComponent) rpc.getContentPane(),w);                                                               
         
-        writeWindowArray(packer, w.getOwnedWindows());
+        writeWindowArray(xid, packer, w.getOwnedWindows());
     }
     
-    private void writeMenuBar(Packer packer, JMenuBar menubar) throws IOException {
+    private void writeMenuBar(int xid, Packer packer, JMenuBar menubar) throws IOException {
         packer.writeArrayBegin(menubar.getMenuCount());
         for (int i=0; i<menubar.getMenuCount();i++) {
-            writeMenuItem(packer,menubar.getMenu(i),Collections.<Integer>emptyList());
+            writeMenuItem(xid, packer,menubar.getMenu(i),Collections.<Integer>emptyList());
         }
         packer.writeArrayEnd();
     }
 
 
-    private void writeMenuItem(Packer packer, JMenuItem menuItem, List<Integer> idList) throws IOException {
+    private void writeMenuItem(int xid, Packer packer, JMenuItem menuItem, List<Integer> idList) throws IOException {
+                
         int componentId = menuArray.size();
         menuArray.add(menuItem);
         List<Integer> newIdList = new ArrayList<Integer>(idList);
         newIdList.add(componentId);
+        
+        packer.write((int)xid);
         
         writePotentiallyNullString(packer,menuItem.getName());
         packer.write(menuItem.getText());
@@ -148,7 +154,7 @@ public class Xanela {
             JMenu menu = (JMenu) menuItem;
             packer.writeArrayBegin(menu.getMenuComponentCount());
             for (int i=0;i<menu.getMenuComponentCount();i++) {
-                writeMenuItem(packer, (JMenuItem)menu.getMenuComponent(i),newIdList);
+                writeMenuItem(xid, packer, (JMenuItem)menu.getMenuComponent(i),newIdList);
             }
             packer.writeArrayEnd();    
         } else {
@@ -157,10 +163,12 @@ public class Xanela {
         }
     }
         
-    private void writeComponent(Packer packer, JComponent c, Component coordBase) throws IOException {
+    private void writeComponent(int xid, Packer packer, JComponent c, Component coordBase) throws IOException {
         
         int componentId = componentArray.size();
         componentArray.add(c);
+        
+        packer.write((int)xid);
         
         packer.writeArrayBegin(2);
         {
@@ -192,24 +200,26 @@ public class Xanela {
 
         packer.write(c.isEnabled());        
         
-        writeComponentType(packer, componentId, c, coordBase);
+        writeComponentType(xid, packer, componentId, c, coordBase);
         
         Component children[] = c.getComponents();
         packer.writeArrayBegin(countShowing(children));
         for (int i=0;i<children.length;i++) {
             if (children[i].isShowing()) {
-                writeComponent(packer, (JComponent)children[i],coordBase);
+                writeComponent(xid, packer, (JComponent)children[i],coordBase);
             }
         }
         packer.writeArrayEnd();
     }
     
-    private static void writeComponentType( Packer packer, 
+    private static void writeComponentType( int xid, Packer packer, 
                 int componentId,
                 JComponent c, 
                 Component coordBase 
             ) throws IOException 
     {
+        packer.write((int)xid);
+        
         if (c instanceof JPanel) {
             packer.write((int)1);
         } else if (c instanceof AbstractButton) {
