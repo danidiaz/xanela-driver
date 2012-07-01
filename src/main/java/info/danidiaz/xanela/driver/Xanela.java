@@ -3,6 +3,7 @@ package info.danidiaz.xanela.driver;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.Window;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
@@ -16,11 +17,13 @@ import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JLayeredPane;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JRadioButtonMenuItem;
+import javax.swing.JRootPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.RootPaneContainer;
@@ -109,6 +112,22 @@ public class Xanela {
             writeMenuBar(xid, packer, menubar);
         }
         
+        Component[] popupLayerArray = new Component[] {};
+        if (w instanceof JFrame) {
+            popupLayerArray = ((JFrame)w).getLayeredPane().getComponentsInLayer(JLayeredPane.POPUP_LAYER);
+        } else if (w instanceof JDialog) {
+            popupLayerArray = ((JDialog)w).getLayeredPane().getComponentsInLayer(JLayeredPane.POPUP_LAYER);                                    
+        }
+        packer.writeArrayBegin(countShowing(popupLayerArray));        
+        for (int i=0;i<popupLayerArray.length;i++) {
+            JComponent c = (JComponent) popupLayerArray[i];
+            if (c.isShowing()) {
+                writeComponent(xid, packer, c, w);    
+            }
+        }
+        packer.writeArrayEnd();
+        
+        
         RootPaneContainer rpc = (RootPaneContainer)w;
         writeComponent(xid, packer, (JComponent) rpc.getContentPane(),w);                                                               
         
@@ -169,6 +188,7 @@ public class Xanela {
         componentArray.add(c);
         
         packer.write((int)xid);
+        packer.write((int)componentId);
         
         packer.writeArrayBegin(2);
         {
@@ -293,5 +313,24 @@ public class Xanela {
             });
         }
 
+    }
+    
+    public void rightClick(final int cId) {
+        
+        System.out.println("entering right-click");
+        
+        final JComponent button = (JComponent)componentArray.get(cId);
+        System.out.println(button.getClass());
+        System.out.println(button.toString());
+        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                new MouseEvent( button, 
+                            MouseEvent.MOUSE_RELEASED, 
+                            0, 
+                            MouseEvent.BUTTON3_MASK, // modifiers 
+                            0, // x 
+                            0, // y
+                            0, 
+                            true                        
+                        ));                    
     }
 }

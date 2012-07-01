@@ -105,6 +105,11 @@ public class Driver implements Runnable
 
                         lastXanela.clickMenu(menuPath);
                             
+                    } else if (methodName.equals("rightClick")) {
+                        int xanelaId = unpacker.readInt();
+                        int cId = unpacker.readInt();
+                        lastXanela.rightClick(cId);
+                            
                     } else if (methodName.equals("shutdown")) {
                         shutdownServer = true;
                     }
