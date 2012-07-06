@@ -22,6 +22,7 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
@@ -36,7 +37,6 @@ import org.msgpack.packer.Packer;
 public class Xanela {
     
     private List<Component> componentArray = new ArrayList<Component>();
-    private List<JMenuItem> menuArray = new ArrayList<JMenuItem>();
     
     public void buildAndWrite(final int xid, final Packer packer) throws IOException {
         
@@ -99,7 +99,18 @@ public class Xanela {
             packer.write((int)w.getWidth());
         }
         packer.writeArrayEnd();
-
+        
+        writeMenuBar(xid, packer, w);
+        
+        writePopupLayer(xid,packer,w);
+                        
+        RootPaneContainer rpc = (RootPaneContainer)w;
+        writeComponent(xid, packer, (JComponent) rpc.getContentPane(),w);                                                               
+        
+        writeWindowArray(xid, packer, w.getOwnedWindows());
+    }
+    
+    private void writeMenuBar(int xid, Packer packer, Window w) throws IOException {        
         JMenuBar menubar = null;
         if (w instanceof JFrame) {
             menubar = ((JFrame)w).getJMenuBar();
@@ -107,11 +118,19 @@ public class Xanela {
             menubar = ((JDialog)w).getJMenuBar();                                    
         }
         if (menubar==null) {
-            packer.writeNil();
+            packer.writeArrayBegin(0);
+            packer.writeArrayEnd();
         } else {
-            writeMenuBar(xid, packer, menubar);
-        }
-        
+            packer.writeArrayBegin(menubar.getMenuCount());
+            for (int i=0; i<menubar.getMenuCount();i++) {
+                writeComponent(xid, packer,menubar.getMenu(i),w);
+            }
+            packer.writeArrayEnd();
+
+        }                
+    }
+    
+    private void writePopupLayer(int xid, Packer packer, Window w) throws IOException {
         Component[] popupLayerArray = new Component[] {};
         if (w instanceof JFrame) {
             popupLayerArray = ((JFrame)w).getLayeredPane().getComponentsInLayer(JLayeredPane.POPUP_LAYER);
@@ -126,60 +145,6 @@ public class Xanela {
             }
         }
         packer.writeArrayEnd();
-        
-        
-        RootPaneContainer rpc = (RootPaneContainer)w;
-        writeComponent(xid, packer, (JComponent) rpc.getContentPane(),w);                                                               
-        
-        writeWindowArray(xid, packer, w.getOwnedWindows());
-    }
-    
-    private void writeMenuBar(int xid, Packer packer, JMenuBar menubar) throws IOException {
-        packer.writeArrayBegin(menubar.getMenuCount());
-        for (int i=0; i<menubar.getMenuCount();i++) {
-            writeMenuItem(xid, packer,menubar.getMenu(i),Collections.<Integer>emptyList());
-        }
-        packer.writeArrayEnd();
-    }
-
-
-    private void writeMenuItem(int xid, Packer packer, JMenuItem menuItem, List<Integer> idList) throws IOException {
-                
-        int componentId = menuArray.size();
-        menuArray.add(menuItem);
-        List<Integer> newIdList = new ArrayList<Integer>(idList);
-        newIdList.add(componentId);
-        
-        packer.write((int)xid);
-        
-        writePotentiallyNullString(packer,menuItem.getName());
-        packer.write(menuItem.getText());
-        if (menuItem instanceof JCheckBoxMenuItem) {
-            packer.write(((JCheckBoxMenuItem)menuItem).isSelected());
-        } else if (menuItem instanceof JRadioButtonMenuItem) {
-            packer.write(((JRadioButtonMenuItem)menuItem).isSelected());
-        } else {
-            packer.writeNil();
-        }
-        packer.write(menuItem.isEnabled());
-        
-        packer.writeArrayBegin(newIdList.size());
-        for (Integer i:newIdList) {
-            packer.write(i);
-        }
-        packer.writeArrayEnd();
-        
-        if (menuItem instanceof JMenu) {
-            JMenu menu = (JMenu) menuItem;
-            packer.writeArrayBegin(menu.getMenuComponentCount());
-            for (int i=0;i<menu.getMenuComponentCount();i++) {
-                writeMenuItem(xid, packer, (JMenuItem)menu.getMenuComponent(i),newIdList);
-            }
-            packer.writeArrayEnd();    
-        } else {
-            packer.writeArrayBegin(0);
-            packer.writeArrayEnd();
-        }
     }
         
     private void writeComponent(int xid, Packer packer, JComponent c, Component coordBase) throws IOException {
@@ -245,12 +210,14 @@ public class Xanela {
         } else if (c instanceof AbstractButton) {
             packer.write((int)2);
             packer.write((int)componentId);
-            if (c instanceof JToggleButton) {
-                packer.write(((JToggleButton)c).isSelected());
+            if (c instanceof JToggleButton || 
+                    c instanceof JCheckBoxMenuItem || 
+                    c instanceof JRadioButtonMenuItem) {
+                packer.write(((AbstractButton)c).isSelected());
             } else {
                 packer.writeNil();
             }
-        } else if (c instanceof JTextField) {
+        } else if (c instanceof JTextField ) {
             packer.write((int)3);
             JTextField textField = (JTextField) c;
             if (textField.isEditable()) {
@@ -261,6 +228,10 @@ public class Xanela {
         } else if (c instanceof JLabel) {
             
             packer.write((int)4);
+            
+        } else if (c instanceof JPopupMenu) {
+            
+            packer.write((int)5);
         } else {
             packer.write((int)77);
             packer.write(c.getClass().getName());
@@ -277,7 +248,7 @@ public class Xanela {
 
     public void click(int buttonId) {
 
-        final JButton button = (JButton)componentArray.get(buttonId);
+        final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
         
         SwingUtilities.invokeLater(new Runnable() {
             
@@ -299,20 +270,6 @@ public class Xanela {
                 textField.setText(text);
             }
         });                 
-    }
-
-    public void clickMenu(final int menuPath[]) {       
-        for (int i=0;i<menuPath.length;i++) {
-            final JMenuItem menuItem = menuArray.get(menuPath[i]);
-            
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    menuItem.doClick();
-                }                       
-            });
-        }
-
     }
     
     public void rightClick(final int cId) {
