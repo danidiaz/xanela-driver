@@ -81,24 +81,29 @@ public class Driver implements Runnable
                     if (methodName.equals("get")) {
                         lastXanelaId++;
                         Xanela xanela = new Xanela();
+                        packer.write((int)0);
                         xanela.buildAndWrite(lastXanelaId,packer);
                         lastXanela = xanela;     
                     } else if (methodName.equals("click")) {
                         int xanelaId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
                         lastXanela.click(buttonId);
+                        packer.write((int)0);
+                        packer.writeNil();
                             
                     } else if (methodName.equals("rightClick")) {
                         int xanelaId = unpacker.readInt();
                         int cId = unpacker.readInt();
                         lastXanela.rightClick(cId);
-                            
+                        packer.write((int)0);
+                        packer.writeNil();
                     }  else if (methodName.equals("setTextField")) {
                         int xanelaId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
                         String text = unpacker.readString();
                         lastXanela.setTextField(buttonId,text);
-                            
+                        packer.write((int)0);
+                        packer.writeNil();
                     } else if (methodName.equals("shutdown")) {
                         shutdownServer = true;
                     }
