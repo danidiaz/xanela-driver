@@ -1,7 +1,9 @@
 package info.danidiaz.xanela.driver;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -10,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
 
 import org.msgpack.MessagePack;
@@ -30,7 +33,9 @@ public class Driver implements Runnable
     private final MessagePack messagePack;
     
     private int lastXanelaId = 0;
-    private Xanela lastXanela; 
+    private Xanela lastXanela = null; 
+    
+    private ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream();
     
     // http://docs.oracle.com/javase/6/docs/api/java/lang/instrument/package-summary.html
     public static void premain(String agentArgs) {
@@ -80,7 +85,7 @@ public class Driver implements Runnable
                     String methodName = unpacker.readString();                
                     if (methodName.equals("get")) {
                         lastXanelaId++;
-                        Xanela xanela = new Xanela();
+                        Xanela xanela = new Xanela(lastXanela);
                         packer.write((int)0);
                         xanela.buildAndWrite(lastXanelaId,packer);
                         lastXanela = xanela;     
@@ -104,6 +109,14 @@ public class Driver implements Runnable
                         lastXanela.setTextField(buttonId,text);
                         packer.write((int)0);
                         packer.writeNil();
+                    } else if (methodName.equals("getWindowImage")) {
+                        int xanelaId = unpacker.readInt();
+                        int windowId = unpacker.readInt();
+                        BufferedImage image = lastXanela.getWindowImage(windowId);
+                        imageBuffer.reset();
+                        ImageIO.write(image, "png", imageBuffer);
+                        packer.write((int)0);
+                        packer.write(imageBuffer.toByteArray());
                     } else if (methodName.equals("shutdown")) {
                         shutdownServer = true;
                     }

@@ -4,11 +4,14 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.Window;
 import java.awt.event.MouseEvent;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
@@ -36,8 +39,18 @@ import org.msgpack.packer.Packer;
 
 public class Xanela {
     
+    private ImageBin imageBin;
+
+    private List<Window> windowArray = new ArrayList<Window>();
+    private Map<Window,BufferedImage> windowImageMap = new HashMap<Window,BufferedImage>();
+    
     private List<Component> componentArray = new ArrayList<Component>();
     
+    boolean dirty = false;
+    
+    public Xanela(Xanela xanela) {
+        this.imageBin = xanela==null?new ImageBin():xanela.obtainImageBin();
+    }
     public void buildAndWrite(final int xid, final Packer packer) throws IOException {
         
         try {
@@ -57,7 +70,9 @@ public class Xanela {
             e.printStackTrace();
         } catch (InvocationTargetException e) {
             e.printStackTrace();
-        }            
+        } finally {
+            this.imageBin.flush();
+        }
     }
     
     private static int countShowing(Component[] warray) {
@@ -83,7 +98,14 @@ public class Xanela {
     
     private void writeWindow(int xid, Packer packer, Window w) throws IOException {
         
+        int windowId = windowArray.size();
+        windowArray.add(w);
+        BufferedImage image = imageBin.obtainImage(w.getSize());
+        w.paint(image.getGraphics());
+        windowImageMap.put(w, image);
+        
         packer.write((int)xid);
+        packer.write((int)windowId);
         
         String title = "";
         if (w instanceof JFrame) {
@@ -289,5 +311,19 @@ public class Xanela {
                             0, 
                             true                        
                         ));                    
+    }
+    
+    public BufferedImage getWindowImage(final int windowId) {
+       Window window = windowArray.get(windowId);
+       return windowImageMap.get(window);
+    }
+    
+    private void setDirty() {
+        this.dirty = true;
+    }
+    
+    private ImageBin obtainImageBin() {
+        setDirty();
+        return new ImageBin(windowImageMap.values());
     }
 }
