@@ -117,6 +117,12 @@ public class Driver implements Runnable
                         ImageIO.write(image, "png", imageBuffer);
                         packer.write((int)0);
                         packer.write(imageBuffer.toByteArray());
+                    } else if (methodName.equals("closeWindow")) {
+                        int xanelaId = unpacker.readInt();
+                        int windowId = unpacker.readInt();
+                        lastXanela.closeWindow(windowId);
+                        packer.write((int)0);
+                        packer.writeNil();
                     } else if (methodName.equals("shutdown")) {
                         shutdownServer = true;
                     }

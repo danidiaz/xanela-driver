@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.Window;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -295,9 +296,7 @@ public class Xanela {
     }
     
     public void rightClick(final int cId) {
-        
-        System.out.println("entering right-click");
-        
+                
         final JComponent button = (JComponent)componentArray.get(cId);
         System.out.println(button.getClass());
         System.out.println(button.toString());
@@ -312,11 +311,19 @@ public class Xanela {
                             true                        
                         ));                    
     }
-    
+           
     public BufferedImage getWindowImage(final int windowId) {
        Window window = windowArray.get(windowId);
        return windowImageMap.get(window);
     }
+
+    public void closeWindow(final int windowId) {
+        Window window = windowArray.get(windowId);
+        
+        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                    new WindowEvent(window, WindowEvent.WINDOW_CLOSING) 
+                );
+     }
     
     private void setDirty() {
         this.dirty = true;
