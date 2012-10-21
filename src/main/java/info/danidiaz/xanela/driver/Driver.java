@@ -89,7 +89,15 @@ public class Driver implements Runnable
                         packer.write((int)0);
                         xanela.buildAndWrite(lastXanelaId,packer);
                         lastXanela = xanela;     
-                    } else if (methodName.equals("click")) {
+                    } else if (methodName.equals("toggle")) {
+                        int xanelaId = unpacker.readInt();
+                        int buttonId = unpacker.readInt();
+                        boolean targetState = unpacker.readBoolean();
+                        lastXanela.toggle(buttonId,targetState);
+                        packer.write((int)0);
+                        packer.writeNil();
+                            
+                    }  else if (methodName.equals("click")) {
                         int xanelaId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
                         lastXanela.click(buttonId);

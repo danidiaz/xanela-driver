@@ -230,18 +230,15 @@ public class Xanela {
         
         if (c instanceof JPanel) {
             packer.write((int)1);
-        } else if (c instanceof AbstractButton) {
+        } else if (c instanceof JToggleButton || c instanceof JCheckBoxMenuItem || c instanceof JRadioButtonMenuItem) {
             packer.write((int)2);
             packer.write((int)componentId);
-            if (c instanceof JToggleButton || 
-                    c instanceof JCheckBoxMenuItem || 
-                    c instanceof JRadioButtonMenuItem) {
-                packer.write(((AbstractButton)c).isSelected());
-            } else {
-                packer.writeNil();
-            }
-        } else if (c instanceof JTextField ) {
+            packer.write(((AbstractButton)c).isSelected());                 
+        } else if (c instanceof AbstractButton) { // normal button, not toggle button
             packer.write((int)3);
+            packer.write((int)componentId);
+        } else if (c instanceof JTextField ) {
+            packer.write((int)4);
             JTextField textField = (JTextField) c;
             if (textField.isEditable()) {
                 packer.write((int)componentId);
@@ -250,11 +247,11 @@ public class Xanela {
             }
         } else if (c instanceof JLabel) {
             
-            packer.write((int)4);
+            packer.write((int)5);
             
         } else if (c instanceof JPopupMenu) {
             
-            packer.write((int)5);
+            packer.write((int)6);
         } else {
             packer.write((int)77);
             packer.write(c.getClass().getName());
@@ -269,6 +266,21 @@ public class Xanela {
         }
     }
 
+    public void toggle(final int buttonId, final boolean targetState) {
+
+        final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
+        
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {
+                if (button.isSelected() != targetState) {
+                    button.doClick();
+                }
+            }
+        });                 
+    }
+    
     public void click(int buttonId) {
 
         final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
