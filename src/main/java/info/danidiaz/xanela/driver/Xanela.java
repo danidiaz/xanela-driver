@@ -17,11 +17,13 @@ import java.util.Map;
 import javax.swing.AbstractButton;
 import javax.swing.JButton;
 import javax.swing.JCheckBoxMenuItem;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
+import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
@@ -31,12 +33,15 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.ListCellRenderer;
 import javax.swing.RootPaneContainer;
 import javax.swing.SwingUtilities;
 import javax.swing.text.JTextComponent;
 
 import org.msgpack.MessagePackable;
 import org.msgpack.packer.Packer;
+
+import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 
 public class Xanela {
     
@@ -220,7 +225,7 @@ public class Xanela {
         packer.writeArrayEnd();
     }
     
-    private static void writeComponentType( int xid, Packer packer, 
+    private void writeComponentType( int xid, Packer packer, 
                 int componentId,
                 JComponent c, 
                 Component coordBase 
@@ -249,9 +254,47 @@ public class Xanela {
             
             packer.write((int)5);
             
-        } else if (c instanceof JPopupMenu) {
+        } else if (c instanceof JComboBox) {
             
             packer.write((int)6);
+            packer.write((int)componentId);
+
+            JComboBox comboBox = (JComboBox)c;
+            ListCellRenderer renderer = comboBox.getRenderer();
+            JList dummyJList = new JList();
+
+            if (comboBox.getSelectedIndex()==-1) {
+                packer.writeNil();
+            } else {
+                JComponent cell = (JComponent)renderer.getListCellRendererComponent(dummyJList, 
+                                comboBox.getModel().getElementAt(comboBox.getSelectedIndex()), 
+                                comboBox.getSelectedIndex(), 
+                                false, 
+                                false
+                            );
+                writeComponent(xid, packer, cell, coordBase);
+            }
+            
+                
+/*            packer.writeArrayBegin(comboBox.getItemCount()); // the cells
+            for (int index=0;index<comboBox.getItemCount();index++) {
+                JComponent cell = (JComponent)renderer.getListCellRendererComponent(dummyJList, 
+                        comboBox.getModel().getElementAt(index), 
+                        index, 
+                        false, 
+                        false
+                    );                
+                packer.write((int)xid);
+                packer.write((int)componentId);
+                packer.write((int)index);                
+                writeComponent(xid, packer, cell, coordBase);
+                packer.write(index==comboBox.getSelectedIndex());
+            }
+            packer.writeArrayEnd();*/
+                       
+        } else if (c instanceof JPopupMenu) {
+            
+            packer.write((int)7);
         } else {
             packer.write((int)77);
             packer.write(c.getClass().getName());
@@ -293,6 +336,19 @@ public class Xanela {
             }
         });                 
     }
+
+    public void clickCombo(int buttonId) {
+
+        final JComboBox button = (JComboBox)componentArray.get(buttonId);
+        
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {
+                button.showPopup();
+            }
+        });                 
+    }    
     
     public void setTextField(int cId, final String text) {
 

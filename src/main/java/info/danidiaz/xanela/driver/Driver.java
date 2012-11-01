@@ -104,6 +104,13 @@ public class Driver implements Runnable
                         packer.write((int)0);
                         packer.writeNil();
                             
+                    } else if (methodName.equals("clickCombo")) {
+                        int xanelaId = unpacker.readInt();
+                        int buttonId = unpacker.readInt();
+                        lastXanela.clickCombo(buttonId);
+                        packer.write((int)0);
+                        packer.writeNil();
+                            
                     } else if (methodName.equals("rightClick")) {
                         int xanelaId = unpacker.readInt();
                         int cId = unpacker.readInt();
