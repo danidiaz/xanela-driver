@@ -2,12 +2,14 @@ package info.danidiaz.xanela.driver;
 
 import java.awt.Component;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,6 +44,7 @@ import org.msgpack.MessagePackable;
 import org.msgpack.packer.Packer;
 
 import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 
 public class Xanela {
     
@@ -225,13 +228,13 @@ public class Xanela {
         packer.writeArrayEnd();
     }
     
-    private void writeComponentType( int xid, Packer packer, 
+    private void writeComponentType( int xanelaid, Packer packer, 
                 int componentId,
                 JComponent c, 
                 Component coordBase 
             ) throws IOException 
     {
-        packer.write((int)xid);
+        packer.write((int)xanelaid);
         
         if (c instanceof JPanel) {
             packer.write((int)1);
@@ -272,29 +275,33 @@ public class Xanela {
                                 false, 
                                 false
                             );
-                writeComponent(xid, packer, cell, coordBase);
-            }
+                writeComponent(xanelaid, packer, cell, coordBase);
+            }                          
+                       
+        } else if (c instanceof JList) {
+            packer.write((int)7);
+            JList list = (JList) c;
+            ListCellRenderer renderer = list.getCellRenderer();
             
-                
-/*            packer.writeArrayBegin(comboBox.getItemCount()); // the cells
-            for (int index=0;index<comboBox.getItemCount();index++) {
-                JComponent cell = (JComponent)renderer.getListCellRendererComponent(dummyJList, 
-                        comboBox.getModel().getElementAt(index), 
-                        index, 
+            packer.writeArrayBegin((int)list.getModel().getSize());
+            for (int rowid=0; rowid<list.getModel().getSize(); rowid++) {
+                packer.write((int)xanelaid);
+                packer.write((int)componentId);
+                packer.write((int)rowid);
+                packer.write((int)0);
+                JComponent cell = (JComponent)renderer.getListCellRendererComponent(list, 
+                        list.getModel().getElementAt(rowid), 
+                        rowid, 
                         false, 
                         false
-                    );                
-                packer.write((int)xid);
-                packer.write((int)componentId);
-                packer.write((int)index);                
-                writeComponent(xid, packer, cell, coordBase);
-                packer.write(index==comboBox.getSelectedIndex());
+                    );
+                writeComponent(xanelaid, packer, cell, coordBase);
             }
-            packer.writeArrayEnd();*/
-                       
+            packer.writeArrayEnd();
+            
         } else if (c instanceof JPopupMenu) {
             
-            packer.write((int)7);
+            packer.write((int)8);
         } else {
             packer.write((int)77);
             packer.write(c.getClass().getName());
@@ -318,7 +325,47 @@ public class Xanela {
             @Override
             public void run() {
                 if (button.isSelected() != targetState) {
-                    button.doClick();
+                    //button.doClick();
+                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                            new MouseEvent( button, 
+                                        MouseEvent.MOUSE_ENTERED, 
+                                        0, 
+                                        0, // modifiers 
+                                        button.getWidth()/2, // x 
+                                        button.getHeight()/2, // y
+                                        0, 
+                                        true                        
+                                    ));
+                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                            new MouseEvent( button, 
+                                        MouseEvent.MOUSE_PRESSED, 
+                                        0, 
+                                        MouseEvent.BUTTON1_MASK, // modifiers 
+                                        button.getWidth()/2, // x 
+                                        button.getHeight()/2, // y
+                                        0, 
+                                        true                        
+                                    )); 
+                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                            new MouseEvent( button, 
+                                        MouseEvent.MOUSE_RELEASED, 
+                                        0, 
+                                        MouseEvent.BUTTON1_MASK, // modifiers 
+                                        button.getWidth()/2, // x 
+                                        button.getHeight()/2, // y
+                                        0, 
+                                        true                        
+                                    ));                         
+                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                            new MouseEvent( button, 
+                                        MouseEvent.MOUSE_CLICKED, 
+                                        0, 
+                                        MouseEvent.BUTTON1_MASK, // modifiers 
+                                        button.getWidth()/2, // x 
+                                        button.getHeight()/2, // y
+                                        0, 
+                                        true                        
+                                    ));                    
                 }
             }
         });                 
@@ -332,7 +379,47 @@ public class Xanela {
             
             @Override
             public void run() {
-                button.doClick();
+                // button.doClick();
+                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                        new MouseEvent( button, 
+                                    MouseEvent.MOUSE_ENTERED, 
+                                    0, 
+                                    0, // modifiers 
+                                    button.getWidth()/2, // x 
+                                    button.getHeight()/2, // y
+                                    0, 
+                                    true                        
+                                ));
+                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                        new MouseEvent( button, 
+                                    MouseEvent.MOUSE_PRESSED, 
+                                    0, 
+                                    MouseEvent.BUTTON1_MASK, // modifiers 
+                                    button.getWidth()/2, // x 
+                                    button.getHeight()/2, // y
+                                    0, 
+                                    true                        
+                                )); 
+                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                        new MouseEvent( button, 
+                                    MouseEvent.MOUSE_RELEASED, 
+                                    0, 
+                                    MouseEvent.BUTTON1_MASK, // modifiers 
+                                    button.getWidth()/2, // x 
+                                    button.getHeight()/2, // y
+                                    0, 
+                                    true                        
+                                ));                         
+                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                        new MouseEvent( button, 
+                                    MouseEvent.MOUSE_CLICKED, 
+                                    0, 
+                                    MouseEvent.BUTTON1_MASK, // modifiers 
+                                    button.getWidth()/2, // x 
+                                    button.getHeight()/2, // y
+                                    0, 
+                                    true                        
+                                )); 
             }
         });                 
     }
@@ -359,6 +446,70 @@ public class Xanela {
             @Override
             public void run() {
                 textField.setText(text);
+            }
+        });                 
+    }
+    
+    public void selectCell(final int componentid, final int rowid, final int columnid) {
+
+        final Component component = componentArray.get(componentid);
+        
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {
+                try {
+                    if (component instanceof JList) {
+                        JList list = (JList) component;
+
+                        list.ensureIndexIsVisible(rowid);
+                        Rectangle bounds = list.getCellBounds(rowid, rowid);
+                        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                                new MouseEvent( list, 
+                                            MouseEvent.MOUSE_PRESSED, 
+                                            0, 
+                                            MouseEvent.BUTTON1_MASK, // modifiers 
+                                            bounds.x + bounds.width/2, // x 
+                                            bounds.y + bounds.height/2, // y
+                                            0, 
+                                            true                        
+                                        )); 
+                        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                                new MouseEvent( list, 
+                                            MouseEvent.MOUSE_RELEASED, 
+                                            0, 
+                                            MouseEvent.BUTTON1_MASK, // modifiers 
+                                            bounds.x + bounds.width/2, // x 
+                                            bounds.y + bounds.height/2, // y
+                                            0, 
+                                            true                        
+                                        ));                         
+                        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                                new MouseEvent( list, 
+                                            MouseEvent.MOUSE_CLICKED, 
+                                            0, 
+                                            MouseEvent.BUTTON1_MASK, // modifiers 
+                                            bounds.x + bounds.width/2, // x 
+                                            bounds.y + bounds.height/2, // y
+                                            0, 
+                                            true                        
+                                        )); 
+                        //list.setSelectedIndex(rowid);
+/*                        Method m = JList.class.getDeclaredMethod("fireSelectionValueChanged", 
+                                Integer.TYPE,Integer.TYPE,Boolean.TYPE);
+                        m.setAccessible(true);
+                        m.invoke(list, 0, list.getModel().getSize()-1, false);
+*/                                
+                    }
+                } /*catch (NoSuchMethodException e) {
+                    e.printStackTrace();
+                } catch (InvocationTargetException e) {
+                    e.printStackTrace();
+                } catch (IllegalArgumentException e) {                 
+                    e.printStackTrace();
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
+                }*/ finally {}
             }
         });                 
     }

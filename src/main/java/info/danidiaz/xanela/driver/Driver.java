@@ -124,7 +124,15 @@ public class Driver implements Runnable
                         lastXanela.setTextField(buttonId,text);
                         packer.write((int)0);
                         packer.writeNil();
-                    } else if (methodName.equals("getWindowImage")) {
+                    }  else if (methodName.equals("selectCell")) {
+                        int xanelaId = unpacker.readInt();
+                        int componentId = unpacker.readInt();
+                        int rowId = unpacker.readInt();
+                        int columnId = unpacker.readInt();
+                        lastXanela.selectCell(componentId,rowId,columnId);
+                        packer.write((int)0);
+                        packer.writeNil();
+                    }  else if (methodName.equals("getWindowImage")) {
                         int xanelaId = unpacker.readInt();
                         int windowId = unpacker.readInt();
                         BufferedImage image = lastXanela.getWindowImage(windowId);
