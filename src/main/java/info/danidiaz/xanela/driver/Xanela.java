@@ -320,108 +320,21 @@ public class Xanela {
 
         final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
         
-        SwingUtilities.invokeLater(new Runnable() {
-            
-            @Override
-            public void run() {
-                if (button.isSelected() != targetState) {
-                    //button.doClick();
-                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                            new MouseEvent( button, 
-                                        MouseEvent.MOUSE_ENTERED, 
-                                        0, 
-                                        0, // modifiers 
-                                        button.getWidth()/2, // x 
-                                        button.getHeight()/2, // y
-                                        0, 
-                                        true                        
-                                    ));
-                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                            new MouseEvent( button, 
-                                        MouseEvent.MOUSE_PRESSED, 
-                                        0, 
-                                        MouseEvent.BUTTON1_MASK, // modifiers 
-                                        button.getWidth()/2, // x 
-                                        button.getHeight()/2, // y
-                                        0, 
-                                        true                        
-                                    )); 
-                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                            new MouseEvent( button, 
-                                        MouseEvent.MOUSE_RELEASED, 
-                                        0, 
-                                        MouseEvent.BUTTON1_MASK, // modifiers 
-                                        button.getWidth()/2, // x 
-                                        button.getHeight()/2, // y
-                                        0, 
-                                        true                        
-                                    ));                         
-                    java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                            new MouseEvent( button, 
-                                        MouseEvent.MOUSE_CLICKED, 
-                                        0, 
-                                        MouseEvent.BUTTON1_MASK, // modifiers 
-                                        button.getWidth()/2, // x 
-                                        button.getHeight()/2, // y
-                                        0, 
-                                        true                        
-                                    ));                    
-                }
-            }
-        });                 
+        if (button.isSelected() != targetState) {
+            click(buttonId);
+        }                          
     }
     
     public void click(int buttonId) {
 
         final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
         
-        SwingUtilities.invokeLater(new Runnable() {
-            
-            @Override
-            public void run() {
-                // button.doClick();
-                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                        new MouseEvent( button, 
-                                    MouseEvent.MOUSE_ENTERED, 
-                                    0, 
-                                    0, // modifiers 
-                                    button.getWidth()/2, // x 
-                                    button.getHeight()/2, // y
-                                    0, 
-                                    true                        
-                                ));
-                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                        new MouseEvent( button, 
-                                    MouseEvent.MOUSE_PRESSED, 
-                                    0, 
-                                    MouseEvent.BUTTON1_MASK, // modifiers 
-                                    button.getWidth()/2, // x 
-                                    button.getHeight()/2, // y
-                                    0, 
-                                    true                        
-                                )); 
-                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                        new MouseEvent( button, 
-                                    MouseEvent.MOUSE_RELEASED, 
-                                    0, 
-                                    MouseEvent.BUTTON1_MASK, // modifiers 
-                                    button.getWidth()/2, // x 
-                                    button.getHeight()/2, // y
-                                    0, 
-                                    true                        
-                                ));                         
-                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                        new MouseEvent( button, 
-                                    MouseEvent.MOUSE_CLICKED, 
-                                    0, 
-                                    MouseEvent.BUTTON1_MASK, // modifiers 
-                                    button.getWidth()/2, // x 
-                                    button.getHeight()/2, // y
-                                    0, 
-                                    true                        
-                                )); 
-            }
-        });                 
+        Point point = new Point(button.getWidth()/2,button.getHeight()/2);
+
+        postMouseEvent(button, MouseEvent.MOUSE_ENTERED, 0, point, false);
+        postMouseEvent(button, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, true);
+        postMouseEvent(button, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, true);
+        postMouseEvent(button, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, true);                           
     }
 
     public void clickCombo(int buttonId) {
@@ -454,64 +367,17 @@ public class Xanela {
 
         final Component component = componentArray.get(componentid);
         
-        SwingUtilities.invokeLater(new Runnable() {
-            
-            @Override
-            public void run() {
-                try {
-                    if (component instanceof JList) {
-                        JList list = (JList) component;
+        if (component instanceof JList) {
+            JList list = (JList) component;
 
-                        list.ensureIndexIsVisible(rowid);
-                        Rectangle bounds = list.getCellBounds(rowid, rowid);
-                        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                                new MouseEvent( list, 
-                                            MouseEvent.MOUSE_PRESSED, 
-                                            0, 
-                                            MouseEvent.BUTTON1_MASK, // modifiers 
-                                            bounds.x + bounds.width/2, // x 
-                                            bounds.y + bounds.height/2, // y
-                                            0, 
-                                            true                        
-                                        )); 
-                        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                                new MouseEvent( list, 
-                                            MouseEvent.MOUSE_RELEASED, 
-                                            0, 
-                                            MouseEvent.BUTTON1_MASK, // modifiers 
-                                            bounds.x + bounds.width/2, // x 
-                                            bounds.y + bounds.height/2, // y
-                                            0, 
-                                            true                        
-                                        ));                         
-                        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                                new MouseEvent( list, 
-                                            MouseEvent.MOUSE_CLICKED, 
-                                            0, 
-                                            MouseEvent.BUTTON1_MASK, // modifiers 
-                                            bounds.x + bounds.width/2, // x 
-                                            bounds.y + bounds.height/2, // y
-                                            0, 
-                                            true                        
-                                        )); 
-                        //list.setSelectedIndex(rowid);
-/*                        Method m = JList.class.getDeclaredMethod("fireSelectionValueChanged", 
-                                Integer.TYPE,Integer.TYPE,Boolean.TYPE);
-                        m.setAccessible(true);
-                        m.invoke(list, 0, list.getModel().getSize()-1, false);
-*/                                
-                    }
-                } /*catch (NoSuchMethodException e) {
-                    e.printStackTrace();
-                } catch (InvocationTargetException e) {
-                    e.printStackTrace();
-                } catch (IllegalArgumentException e) {                 
-                    e.printStackTrace();
-                } catch (IllegalAccessException e) {
-                    e.printStackTrace();
-                }*/ finally {}
-            }
-        });                 
+            list.ensureIndexIsVisible(rowid);
+            Rectangle bounds = list.getCellBounds(rowid, rowid);            
+            Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
+                        
+            postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, false);
+            postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, false);
+            postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, false);                                 
+        }                 
     }
     
     public void rightClick(final int cId) {
@@ -519,16 +385,7 @@ public class Xanela {
         final JComponent button = (JComponent)componentArray.get(cId);
         System.out.println(button.getClass());
         System.out.println(button.toString());
-        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                new MouseEvent( button, 
-                            MouseEvent.MOUSE_RELEASED, 
-                            0, 
-                            MouseEvent.BUTTON3_MASK, // modifiers 
-                            0, // x 
-                            0, // y
-                            0, 
-                            true                        
-                        ));                    
+        postMouseEvent(button, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON3_MASK, new Point(0,0), true);
     }
            
     public BufferedImage getWindowImage(final int windowId) {
@@ -551,5 +408,23 @@ public class Xanela {
     private ImageBin obtainImageBin() {
         setDirty();
         return new ImageBin(windowImageMap.values());
+    }
+    
+    private static void postMouseEvent(Component component, 
+            int type, 
+            int mask, 
+            Point point, 
+            boolean popupTrigger) 
+    {
+        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                new MouseEvent( component, 
+                            type, // event type 
+                            0, 
+                            mask, // modifiers 
+                            point.x, // x 
+                            point.y, // y
+                            0, 
+                            popupTrigger                        
+                        ));  
     }
 }
