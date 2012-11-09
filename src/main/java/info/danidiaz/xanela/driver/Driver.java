@@ -146,6 +146,12 @@ public class Driver implements Runnable
                         lastXanela.closeWindow(windowId);
                         packer.write((int)0);
                         packer.writeNil();
+                    } else if (methodName.equals("escape")) {
+                        int xanelaId = unpacker.readInt();
+                        int windowId = unpacker.readInt();
+                        lastXanela.escape(windowId);
+                        packer.write((int)0);
+                        packer.writeNil();
                     } else if (methodName.equals("shutdown")) {
                         shutdownServer = true;
                     }

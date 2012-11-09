@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Window;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -35,6 +36,7 @@ import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
 import javax.swing.RootPaneContainer;
 import javax.swing.SwingUtilities;
@@ -60,7 +62,7 @@ public class Xanela {
     public Xanela(Xanela xanela) {
         this.imageBin = xanela==null?new ImageBin():xanela.obtainImageBin();
     }
-    public void buildAndWrite(final int xid, final Packer packer) throws IOException {
+    public void buildAndWrite(final int xanelaid, final Packer packer) throws IOException {
         
         try {
             SwingUtilities.invokeAndWait(new Runnable() {
@@ -69,7 +71,7 @@ public class Xanela {
                 public void run() {
                     try {
                         Window warray[] = Window.getOwnerlessWindows();
-                        writeWindowArray(xid, packer, warray);
+                        writeWindowArray(xanelaid, packer, warray);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -94,18 +96,18 @@ public class Xanela {
         return visibleCount;
     }
     
-    private void writeWindowArray(int xid, Packer packer, Window warray[]) throws IOException {
+    private void writeWindowArray(int xanelaid, Packer packer, Window warray[]) throws IOException {
         packer.writeArrayBegin(countShowing(warray));
         for (int i=0;i<warray.length;i++) {
             Window w = warray[i];
             if (w.isShowing()) {
-                writeWindow(xid, packer,w);
+                writeWindow(xanelaid, packer,w);
             }        
         }
         packer.writeArrayEnd();
     }
     
-    private void writeWindow(int xid, Packer packer, Window w) throws IOException {
+    private void writeWindow(int xanelaid, Packer packer, Window w) throws IOException {
         
         int windowId = windowArray.size();
         windowArray.add(w);
@@ -113,7 +115,7 @@ public class Xanela {
         w.paint(image.getGraphics());
         windowImageMap.put(w, image);
         
-        packer.write((int)xid);
+        packer.write((int)xanelaid);
         packer.write((int)windowId);
         
         String title = "";
@@ -131,17 +133,17 @@ public class Xanela {
         }
         packer.writeArrayEnd();
         
-        writeMenuBar(xid, packer, w);
+        writeMenuBar(xanelaid, packer, w);
         
-        writePopupLayer(xid,packer,w);
+        writePopupLayer(xanelaid,packer,w);
                         
         RootPaneContainer rpc = (RootPaneContainer)w;
-        writeComponent(xid, packer, (JComponent) rpc.getContentPane(),w);                                                               
+        writeComponent(xanelaid, packer, (JComponent) rpc.getContentPane(),w);                                                               
         
-        writeWindowArray(xid, packer, w.getOwnedWindows());
+        writeWindowArray(xanelaid, packer, w.getOwnedWindows());
     }
     
-    private void writeMenuBar(int xid, Packer packer, Window w) throws IOException {        
+    private void writeMenuBar(int xanelaid, Packer packer, Window w) throws IOException {        
         JMenuBar menubar = null;
         if (w instanceof JFrame) {
             menubar = ((JFrame)w).getJMenuBar();
@@ -154,14 +156,14 @@ public class Xanela {
         } else {
             packer.writeArrayBegin(menubar.getMenuCount());
             for (int i=0; i<menubar.getMenuCount();i++) {
-                writeComponent(xid, packer,menubar.getMenu(i),w);
+                writeComponent(xanelaid, packer,menubar.getMenu(i),w);
             }
             packer.writeArrayEnd();
 
         }                
     }
     
-    private void writePopupLayer(int xid, Packer packer, Window w) throws IOException {
+    private void writePopupLayer(int xanelaid, Packer packer, Window w) throws IOException {
         Component[] popupLayerArray = new Component[] {};
         if (w instanceof JFrame) {
             popupLayerArray = ((JFrame)w).getLayeredPane().getComponentsInLayer(JLayeredPane.POPUP_LAYER);
@@ -172,18 +174,18 @@ public class Xanela {
         for (int i=0;i<popupLayerArray.length;i++) {
             JComponent c = (JComponent) popupLayerArray[i];
             if (c.isShowing()) {
-                writeComponent(xid, packer, c, w);    
+                writeComponent(xanelaid, packer, c, w);    
             }
         }
         packer.writeArrayEnd();
     }
         
-    private void writeComponent(int xid, Packer packer, JComponent c, Component coordBase) throws IOException {
+    private void writeComponent(int xanelaid, Packer packer, JComponent c, Component coordBase) throws IOException {
         
         int componentId = componentArray.size();
         componentArray.add(c);
         
-        packer.write((int)xid);
+        packer.write((int)xanelaid);
         packer.write((int)componentId);
         
         packer.writeArrayBegin(2);
@@ -216,13 +218,13 @@ public class Xanela {
 
         packer.write(c.isEnabled());        
         
-        writeComponentType(xid, packer, componentId, c, coordBase);
+        writeComponentType(xanelaid, packer, componentId, c, coordBase);
         
         Component children[] = c.getComponents();
         packer.writeArrayBegin(countShowing(children));
         for (int i=0;i<children.length;i++) {
             if (children[i].isShowing()) {
-                writeComponent(xid, packer, (JComponent)children[i],coordBase);
+                writeComponent(xanelaid, packer, (JComponent)children[i],coordBase);
             }
         }
         packer.writeArrayEnd();
@@ -322,9 +324,20 @@ public class Xanela {
         
         if (button.isSelected() != targetState) {
             click(buttonId);
-        }                          
+        } else {
+/*            for (int i=0;i<5;i++) {
+                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                        new KeyEvent( SwingUtilities.getRoot(button), 
+                                    KeyEvent.KEY_TYPED, 
+                                    System.currentTimeMillis(), 
+                                    0, 
+                                    KeyEvent.VK_ESCAPE, 
+                                    KeyEvent.CHAR_UNDEFINED       
+                                ));
+            }*/
+        }
     }
-    
+        
     public void click(int buttonId) {
 
         final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
@@ -350,9 +363,9 @@ public class Xanela {
         });                 
     }    
     
-    public void setTextField(int cId, final String text) {
+    public void setTextField(int componentid, final String text) {
 
-        final JTextField textField = (JTextField)componentArray.get(cId);
+        final JTextField textField = (JTextField)componentArray.get(componentid);
         
         SwingUtilities.invokeLater(new Runnable() {
             
@@ -380,9 +393,9 @@ public class Xanela {
         }                 
     }
     
-    public void rightClick(final int cId) {
+    public void rightClick(final int componentid) {
                 
-        final JComponent button = (JComponent)componentArray.get(cId);
+        final JComponent button = (JComponent)componentArray.get(componentid);
         System.out.println(button.getClass());
         System.out.println(button.toString());
         postMouseEvent(button, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON3_MASK, new Point(0,0), true);
@@ -399,7 +412,20 @@ public class Xanela {
         java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
                     new WindowEvent(window, WindowEvent.WINDOW_CLOSING) 
                 );
-     }
+    }
+    
+    public void escape(final int windowid) {
+        Window window = windowArray.get(windowid);
+        
+        java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
+                new KeyEvent( window, 
+                            KeyEvent.KEY_PRESSED, 
+                            System.currentTimeMillis(), 
+                            0, 
+                            KeyEvent.VK_ESCAPE,
+                            (char)KeyEvent.VK_ESCAPE       
+                        ));
+    }    
     
     private void setDirty() {
         this.dirty = true;
