@@ -34,6 +34,7 @@ import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
@@ -304,6 +305,20 @@ public class Xanela {
         } else if (c instanceof JPopupMenu) {
             
             packer.write((int)8);
+            
+        } else if (c instanceof JTabbedPane) {
+            packer.write((int)70);
+            JTabbedPane tpane = (JTabbedPane)c;
+            packer.writeArrayBegin(tpane.getTabCount());
+            for (int i=0; i<tpane.getTabCount();i++) {
+                packer.write((int)xanelaid);
+                packer.write((int)componentId);
+                packer.write((int)i);
+                packer.write(tpane.getTitleAt(i));
+                writePotentiallyNullString(packer,tpane.getToolTipTextAt(i));
+                packer.write(i==tpane.getSelectedIndex());
+            }
+            packer.writeArrayEnd();
         } else {
             packer.write((int)77);
             packer.write(c.getClass().getName());
@@ -324,18 +339,7 @@ public class Xanela {
         
         if (button.isSelected() != targetState) {
             click(buttonId);
-        } else {
-/*            for (int i=0;i<5;i++) {
-                java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
-                        new KeyEvent( SwingUtilities.getRoot(button), 
-                                    KeyEvent.KEY_TYPED, 
-                                    System.currentTimeMillis(), 
-                                    0, 
-                                    KeyEvent.VK_ESCAPE, 
-                                    KeyEvent.CHAR_UNDEFINED       
-                                ));
-            }*/
-        }
+        } 
     }
         
     public void click(int buttonId) {
@@ -391,6 +395,12 @@ public class Xanela {
             postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, false);
             postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, false);                                 
         }                 
+    }
+    
+    public void selectTab(final int componentid, final int tabid) {
+
+        final JTabbedPane tpane = (JTabbedPane) componentArray.get(componentid);
+        tpane.setSelectedIndex(tabid);
     }
     
     public void rightClick(final int componentid) {

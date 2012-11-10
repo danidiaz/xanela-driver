@@ -132,6 +132,13 @@ public class Driver implements Runnable
                         lastXanela.selectCell(componentId,rowId,columnId);
                         packer.write((int)0);
                         packer.writeNil();
+                    }  else if (methodName.equals("selectTab")) {
+                        int xanelaId = unpacker.readInt();
+                        int componentId = unpacker.readInt();
+                        int tabid = unpacker.readInt();
+                        lastXanela.selectTab(componentId,tabid);
+                        packer.write((int)0);
+                        packer.writeNil();
                     }  else if (methodName.equals("getWindowImage")) {
                         int xanelaId = unpacker.readInt();
                         int windowId = unpacker.readInt();
