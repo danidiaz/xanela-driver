@@ -124,12 +124,12 @@ public class Driver implements Runnable
                         lastXanela.setTextField(buttonId,text);
                         packer.write((int)0);
                         packer.writeNil();
-                    }  else if (methodName.equals("selectCell")) {
+                    }  else if (methodName.equals("clickCell")) {
                         int xanelaId = unpacker.readInt();
                         int componentId = unpacker.readInt();
                         int rowId = unpacker.readInt();
                         int columnId = unpacker.readInt();
-                        lastXanela.selectCell(componentId,rowId,columnId);
+                        lastXanela.clickCell(componentId,rowId,columnId);
                         packer.write((int)0);
                         packer.writeNil();
                     }  else if (methodName.equals("selectTab")) {

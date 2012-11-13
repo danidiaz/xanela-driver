@@ -304,7 +304,7 @@ public class Xanela {
             
         } else if (c instanceof JPopupMenu) {
             
-            packer.write((int)8);
+            packer.write((int)50);
             
         } else if (c instanceof JTabbedPane) {
             packer.write((int)70);
@@ -380,7 +380,7 @@ public class Xanela {
         });                 
     }
     
-    public void selectCell(final int componentid, final int rowid, final int columnid) {
+    public void clickCell(final int componentid, final int rowid, final int columnid) {
 
         final Component component = componentArray.get(componentid);
         
