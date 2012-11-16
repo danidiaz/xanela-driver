@@ -35,12 +35,15 @@ import javax.swing.JPopupMenu;
 import javax.swing.JRadioButtonMenuItem;
 import javax.swing.JRootPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
 import javax.swing.RootPaneContainer;
 import javax.swing.SwingUtilities;
+import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableModel;
 import javax.swing.text.JTextComponent;
 
 import org.msgpack.MessagePackable;
@@ -302,8 +305,37 @@ public class Xanela {
             }
             packer.writeArrayEnd();
             
-        } else if (c instanceof JPopupMenu) {
+        } else if (c instanceof JTable) {
+            packer.write((int)8);
+            JTable table = (JTable) c;
+            TableModel model = table.getModel();
             
+            int rowcount = model.getRowCount();
+            int columncount = model.getColumnCount();
+            packer.writeArrayBegin(rowcount);            
+            for (int i=0;i<rowcount;i++) {
+                packer.writeArrayBegin(columncount);
+                for (int j=0;j<columncount;j++) {
+                    packer.write((int)xanelaid);
+                    packer.write((int)componentId);
+                    packer.write((int)i);
+                    packer.write((int)j);
+
+                    TableCellRenderer renderer = table.getCellRenderer(i, j);                    
+                    JComponent cell = (JComponent)renderer.getTableCellRendererComponent(table, 
+                            model.getValueAt(i, j),  
+                            false, 
+                            false,
+                            i,
+                            j
+                        );                    
+                    writeComponent(xanelaid, packer, cell, coordBase);
+                }
+                packer.writeArrayEnd();
+            }                        
+            packer.writeArrayEnd();            
+            
+        } else if (c instanceof JPopupMenu) {                    
             packer.write((int)50);
             
         } else if (c instanceof JTabbedPane) {
@@ -335,15 +367,22 @@ public class Xanela {
 
     public void toggle(final int buttonId, final boolean targetState) {
 
-        final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
-        
-        if (button.isSelected() != targetState) {
-            click(buttonId);
-        } 
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {
+                final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
+                
+                if (button.isSelected() != targetState) {
+                    click(buttonId);
+                }                 
+            }
+        });
+
     }
         
     public void click(int buttonId) {
-
+        
         final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
         
         Point point = new Point(button.getWidth()/2,button.getHeight()/2);
@@ -394,7 +433,17 @@ public class Xanela {
             postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, false);
             postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, false);
             postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, false);                                 
-        }                 
+        } else if (component instanceof JTable) {
+            JTable table = (JTable) component;
+            
+            Rectangle bounds = table.getCellRect(rowid, columnid, false);
+            table.scrollRectToVisible(bounds);
+            
+            Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
+            postMouseEvent(table, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, false);
+            postMouseEvent(table, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, false);
+            postMouseEvent(table, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, false);            
+        }
     }
     
     public void selectTab(final int componentid, final int tabid) {
