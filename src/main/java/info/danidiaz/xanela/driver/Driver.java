@@ -132,6 +132,14 @@ public class Driver implements Runnable
                         lastXanela.clickCell(componentId,rowId,columnId);
                         packer.write((int)0);
                         packer.writeNil();
+                    }  else if (methodName.equals("doubleClickCell")) {
+                        int xanelaId = unpacker.readInt();
+                        int componentId = unpacker.readInt();
+                        int rowId = unpacker.readInt();
+                        int columnId = unpacker.readInt();
+                        lastXanela.doubleClickCell(componentId,rowId,columnId);
+                        packer.write((int)0);
+                        packer.writeNil();
                     }  else if (methodName.equals("selectTab")) {
                         int xanelaId = unpacker.readInt();
                         int componentId = unpacker.readInt();

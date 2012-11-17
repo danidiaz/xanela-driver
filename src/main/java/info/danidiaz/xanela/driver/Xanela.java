@@ -387,10 +387,10 @@ public class Xanela {
         
         Point point = new Point(button.getWidth()/2,button.getHeight()/2);
 
-        postMouseEvent(button, MouseEvent.MOUSE_ENTERED, 0, point, false);
-        postMouseEvent(button, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, true);
-        postMouseEvent(button, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, true);
-        postMouseEvent(button, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, true);                           
+        postMouseEvent(button, MouseEvent.MOUSE_ENTERED, 0, point, 0, false);
+        postMouseEvent(button, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, true);
+        postMouseEvent(button, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, true);
+        postMouseEvent(button, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, true);                           
     }
 
     public void clickCombo(int buttonId) {
@@ -430,9 +430,9 @@ public class Xanela {
             Rectangle bounds = list.getCellBounds(rowid, rowid);            
             Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
                         
-            postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, false);
-            postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, false);
-            postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, false);                                 
+            postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, false);                                 
         } else if (component instanceof JTable) {
             JTable table = (JTable) component;
             
@@ -440,11 +440,47 @@ public class Xanela {
             table.scrollRectToVisible(bounds);
             
             Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
-            postMouseEvent(table, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, false);
-            postMouseEvent(table, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, false);
-            postMouseEvent(table, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, false);            
+            postMouseEvent(table, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            postMouseEvent(table, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            postMouseEvent(table, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, false);            
         }
     }
+    
+    public void doubleClickCell(final int componentid, final int rowid, final int columnid) {
+
+        final Component component = componentArray.get(componentid);
+        
+        if (component instanceof JList) {
+            JList list = (JList) component;
+
+            list.ensureIndexIsVisible(rowid);
+            Rectangle bounds = list.getCellBounds(rowid, rowid);            
+            Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
+                        
+            postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            
+            postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 2, false);
+            postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 2, false);
+            postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 2, false);                                 
+
+        } else if (component instanceof JTable) {
+            JTable table = (JTable) component;
+            
+            Rectangle bounds = table.getCellRect(rowid, columnid, false);
+            table.scrollRectToVisible(bounds);
+            
+            Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
+            postMouseEvent(table, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            postMouseEvent(table, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            postMouseEvent(table, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, false);
+            
+            postMouseEvent(table, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 2, false);
+            postMouseEvent(table, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 2, false);
+            postMouseEvent(table, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 2, false);            
+        }
+    }        
     
     public void selectTab(final int componentid, final int tabid) {
 
@@ -455,9 +491,13 @@ public class Xanela {
     public void rightClick(final int componentid) {
                 
         final JComponent button = (JComponent)componentArray.get(componentid);
-        System.out.println(button.getClass());
-        System.out.println(button.toString());
-        postMouseEvent(button, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON3_MASK, new Point(0,0), true);
+        
+        Point point = new Point(button.getWidth()/2,button.getHeight()/2);
+
+        postMouseEvent(button, MouseEvent.MOUSE_ENTERED, 0, point, 0, false);
+        postMouseEvent(button, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON3_MASK, point, 1, false);
+        postMouseEvent(button, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON3_MASK, point, 1, false);
+        postMouseEvent(button, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON3_MASK, point, 1, true); 
     }
            
     public BufferedImage getWindowImage(final int windowId) {
@@ -498,7 +538,8 @@ public class Xanela {
     private static void postMouseEvent(Component component, 
             int type, 
             int mask, 
-            Point point, 
+            Point point,
+            int clickCount,
             boolean popupTrigger) 
     {
         java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(
@@ -508,7 +549,7 @@ public class Xanela {
                             mask, // modifiers 
                             point.x, // x 
                             point.y, // y
-                            0, 
+                            clickCount, 
                             popupTrigger                        
                         ));  
     }
