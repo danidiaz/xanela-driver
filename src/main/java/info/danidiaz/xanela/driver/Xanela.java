@@ -38,6 +38,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
+import javax.swing.JTree;
 import javax.swing.KeyStroke;
 import javax.swing.ListCellRenderer;
 import javax.swing.RootPaneContainer;
@@ -45,6 +46,9 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 import javax.swing.text.JTextComponent;
+import javax.swing.tree.TreeCellRenderer;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 
 import org.msgpack.MessagePackable;
 import org.msgpack.packer.Packer;
@@ -334,6 +338,53 @@ public class Xanela {
                 packer.writeArrayEnd();
             }                        
             packer.writeArrayEnd();            
+            
+        } else if (c instanceof JTree) {
+            packer.write((int)9);
+            JTree tree = (JTree) c;
+            TreeModel model = tree.getModel();
+            TreeCellRenderer renderer = tree.getCellRenderer();
+            
+            int topcount = tree.isRootVisible()?1:model.getChildCount(model.getRoot());
+            packer.writeArrayBegin(topcount);
+            int basepathcount = tree.isRootVisible()?1:2;
+            int expectedpathcount = basepathcount;
+            for (int rowid=0;rowid<tree.getRowCount();rowid++) {
+                TreePath path = tree.getPathForRow(rowid);
+                if (path.getPathCount()<expectedpathcount) {
+                    for (int i=0; i < expectedpathcount - path.getPathCount();i++) {
+                        packer.writeArrayEnd();
+                    }
+                    expectedpathcount = path.getPathCount();
+                }
+                
+                packer.write((int)xanelaid);
+                packer.write((int)componentId);
+                packer.write((int)rowid);
+                packer.write((int)0);               
+                JComponent cell = (JComponent)renderer.getTreeCellRendererComponent(
+                            tree,
+                            path.getLastPathComponent(),
+                            tree.isRowSelected(rowid),
+                            tree.isExpanded(rowid),
+                            model.isLeaf(path.getLastPathComponent()),
+                            rowid,
+                            true
+                        );
+                writeComponent(xanelaid, packer, cell, coordBase);
+                
+                if (tree.isExpanded(rowid)) {
+                    packer.writeArrayBegin(model.getChildCount(path.getLastPathComponent()));
+                    expectedpathcount++;
+                } else {
+                    packer.writeArrayBegin(0);
+                    packer.writeArrayEnd();   
+                }                
+            }
+            for (int i=0; i < expectedpathcount - basepathcount;i++) {
+                packer.writeArrayEnd();
+            }
+            packer.writeArrayEnd();
             
         } else if (c instanceof JPopupMenu) {                    
             packer.write((int)50);
