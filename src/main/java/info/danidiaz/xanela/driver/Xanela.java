@@ -306,7 +306,9 @@ public class Xanela {
                                     false, 
                                     false
                                 ), 
-                            coordBase );                                
+                            coordBase,
+                            false
+                            );                                
             }
             packer.writeArrayEnd();
             
@@ -335,7 +337,9 @@ public class Xanela {
                                     i,
                                     j
                                 ), 
-                            coordBase );                                                                        
+                            coordBase,
+                            false 
+                            );                                                                        
                 }
                 packer.writeArrayEnd();
             }                        
@@ -373,7 +377,9 @@ public class Xanela {
                                 rowid,
                                 true
                             ), 
-                        coordBase );                                                 
+                        coordBase,
+                        true
+                        );                                                 
                 
                 if (tree.isExpanded(rowid)) {
                     packer.writeArrayBegin(model.getChildCount(path.getLastPathComponent()));
@@ -411,18 +417,21 @@ public class Xanela {
     }
     
     private void writeCell(int xanelaid, 
-            Packer packer, 
-            int componentid, 
-            int rowid, 
-            int colid, 
-            JComponent rendererc, 
-            Component coordBase) throws IOException 
-            {
+                Packer packer, 
+                int componentid, 
+                int rowid, 
+                int colid, 
+                JComponent rendererc, 
+                Component coordBase,
+                boolean belongsToJTree 
+            ) throws IOException 
+    {
         packer.write((int)xanelaid);
         packer.write((int)componentid);
         packer.write((int)rowid);
         packer.write((int)colid);
-        writeComponent(xanelaid, packer, rendererc, coordBase);        
+        writeComponent(xanelaid, packer, rendererc, coordBase);
+        packer.write((boolean)belongsToJTree);
     }
     
     
