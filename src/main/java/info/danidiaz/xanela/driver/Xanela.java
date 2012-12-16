@@ -295,17 +295,18 @@ public class Xanela {
             
             packer.writeArrayBegin((int)list.getModel().getSize());
             for (int rowid=0; rowid<list.getModel().getSize(); rowid++) {
-                packer.write((int)xanelaid);
-                packer.write((int)componentId);
-                packer.write((int)rowid);
-                packer.write((int)0);
-                JComponent cell = (JComponent)renderer.getListCellRendererComponent(list, 
-                        list.getModel().getElementAt(rowid), 
-                        rowid, 
-                        false, 
-                        false
-                    );
-                writeComponent(xanelaid, packer, cell, coordBase);
+                
+                writeCell(  xanelaid, 
+                            packer, 
+                            componentId, 
+                            rowid, 0, 
+                            (JComponent)renderer.getListCellRendererComponent(list, 
+                                    list.getModel().getElementAt(rowid), 
+                                    rowid, 
+                                    false, 
+                                    false
+                                ), 
+                            coordBase );                                
             }
             packer.writeArrayEnd();
             
@@ -320,20 +321,21 @@ public class Xanela {
             for (int i=0;i<rowcount;i++) {
                 packer.writeArrayBegin(columncount);
                 for (int j=0;j<columncount;j++) {
-                    packer.write((int)xanelaid);
-                    packer.write((int)componentId);
-                    packer.write((int)i);
-                    packer.write((int)j);
-
+                    
                     TableCellRenderer renderer = table.getCellRenderer(i, j);                    
-                    JComponent cell = (JComponent)renderer.getTableCellRendererComponent(table, 
-                            model.getValueAt(i, j),  
-                            false, 
-                            false,
-                            i,
-                            j
-                        );                    
-                    writeComponent(xanelaid, packer, cell, coordBase);
+                    writeCell(  
+                            xanelaid, 
+                            packer, 
+                            componentId, 
+                            i, j, 
+                            (JComponent)renderer.getTableCellRendererComponent(table, 
+                                    model.getValueAt(i, j),  
+                                    false, 
+                                    false,
+                                    i,
+                                    j
+                                ), 
+                            coordBase );                                                                        
                 }
                 packer.writeArrayEnd();
             }                        
@@ -345,8 +347,7 @@ public class Xanela {
             TreeModel model = tree.getModel();
             TreeCellRenderer renderer = tree.getCellRenderer();
             
-            int topcount = tree.isRootVisible()?1:model.getChildCount(model.getRoot());
-            packer.writeArrayBegin(topcount);
+            packer.writeArrayBegin(tree.isRootVisible()?1:model.getChildCount(model.getRoot()));
             int basepathcount = tree.isRootVisible()?1:2;
             int expectedpathcount = basepathcount;
             for (int rowid=0;rowid<tree.getRowCount();rowid++) {
@@ -356,22 +357,23 @@ public class Xanela {
                         packer.writeArrayEnd();
                     }
                     expectedpathcount = path.getPathCount();
-                }
+                }                
                 
-                packer.write((int)xanelaid);
-                packer.write((int)componentId);
-                packer.write((int)rowid);
-                packer.write((int)0);               
-                JComponent cell = (JComponent)renderer.getTreeCellRendererComponent(
-                            tree,
-                            path.getLastPathComponent(),
-                            tree.isRowSelected(rowid),
-                            tree.isExpanded(rowid),
-                            model.isLeaf(path.getLastPathComponent()),
-                            rowid,
-                            true
-                        );
-                writeComponent(xanelaid, packer, cell, coordBase);
+                writeCell(  
+                        xanelaid, 
+                        packer, 
+                        componentId, 
+                        rowid, 0, 
+                        (JComponent)renderer.getTreeCellRendererComponent(
+                                tree,
+                                path.getLastPathComponent(),
+                                tree.isRowSelected(rowid),
+                                tree.isExpanded(rowid),
+                                model.isLeaf(path.getLastPathComponent()),
+                                rowid,
+                                true
+                            ), 
+                        coordBase );                                                 
                 
                 if (tree.isExpanded(rowid)) {
                     packer.writeArrayBegin(model.getChildCount(path.getLastPathComponent()));
@@ -408,6 +410,22 @@ public class Xanela {
         }
     }
     
+    private void writeCell(int xanelaid, 
+            Packer packer, 
+            int componentid, 
+            int rowid, 
+            int colid, 
+            JComponent rendererc, 
+            Component coordBase) throws IOException 
+            {
+        packer.write((int)xanelaid);
+        packer.write((int)componentid);
+        packer.write((int)rowid);
+        packer.write((int)colid);
+        writeComponent(xanelaid, packer, rendererc, coordBase);        
+    }
+    
+    
     private static void writePotentiallyNullString(Packer packer, String s) throws IOException {
         if (s==null) {
             packer.writeNil();
@@ -435,13 +453,9 @@ public class Xanela {
     public void click(int buttonId) {
         
         final AbstractButton button = (AbstractButton)componentArray.get(buttonId);
-        
         Point point = new Point(button.getWidth()/2,button.getHeight()/2);
-
         postMouseEvent(button, MouseEvent.MOUSE_ENTERED, 0, point, 0, false);
-        postMouseEvent(button, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, true);
-        postMouseEvent(button, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, true);
-        postMouseEvent(button, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, true);                           
+        pressedReleasedClicked1(button, new Rectangle(0, 0, button.getWidth(), button.getHeight()), 1);
     }
 
     public void clickCombo(int buttonId) {
@@ -473,64 +487,46 @@ public class Xanela {
     public void clickCell(final int componentid, final int rowid, final int columnid) {
 
         final Component component = componentArray.get(componentid);
-        
+        Rectangle bounds = new Rectangle(0,0,0,0);
         if (component instanceof JList) {
             JList list = (JList) component;
-
+            bounds = list.getCellBounds(rowid, rowid);
             list.ensureIndexIsVisible(rowid);
-            Rectangle bounds = list.getCellBounds(rowid, rowid);            
-            Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
-                        
-            postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, false);                                 
         } else if (component instanceof JTable) {
-            JTable table = (JTable) component;
-            
-            Rectangle bounds = table.getCellRect(rowid, columnid, false);
+            JTable table = (JTable) component;            
+            bounds = table.getCellRect(rowid, columnid, false);
             table.scrollRectToVisible(bounds);
-            
-            Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
-            postMouseEvent(table, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            postMouseEvent(table, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            postMouseEvent(table, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, false);            
+        } else if (component instanceof JTree) {
+            JTree tree = (JTree) component;
+            bounds = tree.getRowBounds(rowid);
+            tree.scrollRowToVisible(rowid);            
+        } else {
+            throw new RuntimeException("can't handle component");
         }
+        pressedReleasedClicked1(component, bounds, 1);
     }
     
     public void doubleClickCell(final int componentid, final int rowid, final int columnid) {
 
         final Component component = componentArray.get(componentid);
-        
+        Rectangle bounds = new Rectangle(0,0,0,0);
         if (component instanceof JList) {
             JList list = (JList) component;
-
+            bounds = list.getCellBounds(rowid, rowid);
             list.ensureIndexIsVisible(rowid);
-            Rectangle bounds = list.getCellBounds(rowid, rowid);            
-            Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
-                        
-            postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            
-            postMouseEvent(list, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 2, false);
-            postMouseEvent(list, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 2, false);
-            postMouseEvent(list, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 2, false);                                 
-
         } else if (component instanceof JTable) {
-            JTable table = (JTable) component;
-            
-            Rectangle bounds = table.getCellRect(rowid, columnid, false);
+            JTable table = (JTable) component;            
+            bounds = table.getCellRect(rowid, columnid, false);
             table.scrollRectToVisible(bounds);
-            
-            Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
-            postMouseEvent(table, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            postMouseEvent(table, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            postMouseEvent(table, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 1, false);
-            
-            postMouseEvent(table, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, 2, false);
-            postMouseEvent(table, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, 2, false);
-            postMouseEvent(table, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, 2, false);            
+        } else if (component instanceof JTree) {
+            JTree tree = (JTree) component;
+            bounds = tree.getRowBounds(rowid);
+            tree.scrollRowToVisible(rowid);                        
+        } else {
+            throw new RuntimeException("can't handle component");
         }
+        pressedReleasedClicked1(component, bounds, 1);
+        pressedReleasedClicked1(component, bounds, 2);
     }        
     
     public void selectTab(final int componentid, final int tabid) {
@@ -603,5 +599,13 @@ public class Xanela {
                             clickCount, 
                             popupTrigger                        
                         ));  
+    }
+    
+    private static void pressedReleasedClicked1(Component component, Rectangle bounds, int clickCount) {
+        Point point = new Point(bounds.x + bounds.width/2,bounds.y + bounds.height/2);
+        
+        postMouseEvent(component, MouseEvent.MOUSE_PRESSED, MouseEvent.BUTTON1_MASK, point, clickCount, false);
+        postMouseEvent(component, MouseEvent.MOUSE_RELEASED, MouseEvent.BUTTON1_MASK, point, clickCount, false);
+        postMouseEvent(component, MouseEvent.MOUSE_CLICKED, MouseEvent.BUTTON1_MASK, point, clickCount, false);
     }
 }
