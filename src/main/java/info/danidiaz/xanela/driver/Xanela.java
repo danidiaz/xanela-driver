@@ -467,27 +467,25 @@ public class Xanela {
         pressedReleasedClicked1(button, new Rectangle(0, 0, button.getWidth(), button.getHeight()), 1);
     }
 
-    public void clickCombo(int buttonId) {
-
-        final JComboBox button = (JComboBox)componentArray.get(buttonId);
+    public void clickCombo(final int buttonId) {
         
         SwingUtilities.invokeLater(new Runnable() {
             
             @Override
             public void run() {
+                final JComboBox button = (JComboBox)componentArray.get(buttonId);
                 button.showPopup();
             }
         });                 
     }    
     
-    public void setTextField(int componentid, final String text) {
-
-        final JTextField textField = (JTextField)componentArray.get(componentid);
+    public void setTextField(final int componentid, final String text) {
         
         SwingUtilities.invokeLater(new Runnable() {
             
             @Override
             public void run() {
+                final JTextField textField = (JTextField)componentArray.get(componentid);
                 textField.setText(text);
             }
         });                 
@@ -495,53 +493,90 @@ public class Xanela {
     
     public void clickCell(final int componentid, final int rowid, final int columnid) {
 
-        final Component component = componentArray.get(componentid);
-        Rectangle bounds = new Rectangle(0,0,0,0);
-        if (component instanceof JList) {
-            JList list = (JList) component;
-            bounds = list.getCellBounds(rowid, rowid);
-            list.ensureIndexIsVisible(rowid);
-        } else if (component instanceof JTable) {
-            JTable table = (JTable) component;            
-            bounds = table.getCellRect(rowid, columnid, false);
-            table.scrollRectToVisible(bounds);
-        } else if (component instanceof JTree) {
-            JTree tree = (JTree) component;
-            bounds = tree.getRowBounds(rowid);
-            tree.scrollRowToVisible(rowid);            
-        } else {
-            throw new RuntimeException("can't handle component");
-        }
-        pressedReleasedClicked1(component, bounds, 1);
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {        
+                    final Component component = componentArray.get(componentid);
+                    Rectangle bounds = new Rectangle(0,0,0,0);
+                    if (component instanceof JList) {
+                        JList list = (JList) component;
+                        bounds = list.getCellBounds(rowid, rowid);
+                        list.ensureIndexIsVisible(rowid);
+                    } else if (component instanceof JTable) {
+                        JTable table = (JTable) component;            
+                        bounds = table.getCellRect(rowid, columnid, false);
+                        table.scrollRectToVisible(bounds);
+                    } else if (component instanceof JTree) {
+                        JTree tree = (JTree) component;
+                        bounds = tree.getRowBounds(rowid);
+                        tree.scrollRowToVisible(rowid);            
+                    } else {
+                        throw new RuntimeException("can't handle component");
+                    }
+                    pressedReleasedClicked1(component, bounds, 1);
+            }
+        });                 
+                    
     }
     
     public void doubleClickCell(final int componentid, final int rowid, final int columnid) {
 
-        final Component component = componentArray.get(componentid);
-        Rectangle bounds = new Rectangle(0,0,0,0);
-        if (component instanceof JList) {
-            JList list = (JList) component;
-            bounds = list.getCellBounds(rowid, rowid);
-            list.ensureIndexIsVisible(rowid);
-        } else if (component instanceof JTable) {
-            JTable table = (JTable) component;            
-            bounds = table.getCellRect(rowid, columnid, false);
-            table.scrollRectToVisible(bounds);
-        } else if (component instanceof JTree) {
-            JTree tree = (JTree) component;
-            bounds = tree.getRowBounds(rowid);
-            tree.scrollRowToVisible(rowid);                        
-        } else {
-            throw new RuntimeException("can't handle component");
-        }
-        pressedReleasedClicked1(component, bounds, 1);
-        pressedReleasedClicked1(component, bounds, 2);
-    }        
+        SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {   
+                    final Component component = componentArray.get(componentid);
+                    Rectangle bounds = new Rectangle(0,0,0,0);
+                    if (component instanceof JList) {
+                        JList list = (JList) component;
+                        bounds = list.getCellBounds(rowid, rowid);
+                        list.ensureIndexIsVisible(rowid);
+                    } else if (component instanceof JTable) {
+                        JTable table = (JTable) component;            
+                        bounds = table.getCellRect(rowid, columnid, false);
+                        table.scrollRectToVisible(bounds);
+                    } else if (component instanceof JTree) {
+                        JTree tree = (JTree) component;
+                        bounds = tree.getRowBounds(rowid);
+                        tree.scrollRowToVisible(rowid);                        
+                    } else {
+                        throw new RuntimeException("can't handle component");
+                    }
+                    pressedReleasedClicked1(component, bounds, 1);
+                    pressedReleasedClicked1(component, bounds, 2);
+            }
+        });                         
+    }
+    
+    public void expandCollapseCell(final int componentid, final int rowid, final boolean expand) {
+                       
+       SwingUtilities.invokeLater(new Runnable() {
+            
+            @Override
+            public void run() {
+                final Component component = componentArray.get(componentid);
+                
+                if (component instanceof JTree) {
+                    JTree tree = (JTree)component;
+                    if (expand) {
+                        tree.expandRow(rowid);
+                    } else {
+                        tree.collapseRow(rowid);
+                    }
+                }
+            }
+        });
+    }
     
     public void selectTab(final int componentid, final int tabid) {
-
-        final JTabbedPane tpane = (JTabbedPane) componentArray.get(componentid);
-        tpane.setSelectedIndex(tabid);
+       SwingUtilities.invokeLater(new Runnable() {            
+            @Override
+            public void run() {
+                final JTabbedPane tpane = (JTabbedPane) componentArray.get(componentid);
+                tpane.setSelectedIndex(tabid);
+            }
+        });
     }
     
     public void rightClick(final int componentid) {
