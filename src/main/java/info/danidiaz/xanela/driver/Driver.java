@@ -32,8 +32,8 @@ public class Driver implements Runnable
     private final ServerSocket serverSocket;
     private final MessagePack messagePack;
     
-    private int lastXanelaId = 0;
-    private Xanela lastXanela = null; 
+    private int lastSnapshotId = 0;
+    private Snapshot lastSnapshot = null; 
     
     private ByteArrayOutputStream imageBuffer = new ByteArrayOutputStream();
     
@@ -83,96 +83,96 @@ public class Driver implements Runnable
                
                 try {
                     String methodName = unpacker.readString();                
-                    if (methodName.equals("get")) {
-                        lastXanelaId++;
-                        Xanela xanela = new Xanela(lastXanela);
+                    if (methodName.equals("snapshot")) {
+                        lastSnapshotId++;
+                        Snapshot xanela = new Snapshot(lastSnapshot);
                         packer.write((int)0);
-                        xanela.buildAndWrite(lastXanelaId,packer);
-                        lastXanela = xanela;     
+                        xanela.buildAndWrite(lastSnapshotId,packer);
+                        lastSnapshot = xanela;     
                     } else if (methodName.equals("toggle")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
                         boolean targetState = unpacker.readBoolean();
-                        lastXanela.toggle(buttonId,targetState);
+                        lastSnapshot.toggle(buttonId,targetState);
                         packer.write((int)0);
                         packer.writeNil();
                             
                     }  else if (methodName.equals("click")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
-                        lastXanela.click(buttonId);
+                        lastSnapshot.click(buttonId);
                         packer.write((int)0);
                         packer.writeNil();
                             
                     } else if (methodName.equals("clickCombo")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
-                        lastXanela.clickCombo(buttonId);
+                        lastSnapshot.clickCombo(buttonId);
                         packer.write((int)0);
                         packer.writeNil();
                             
                     } else if (methodName.equals("rightClick")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int cId = unpacker.readInt();
-                        lastXanela.rightClick(cId);
+                        lastSnapshot.rightClick(cId);
                         packer.write((int)0);
                         packer.writeNil();
                     }  else if (methodName.equals("setTextField")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int buttonId = unpacker.readInt();
                         String text = unpacker.readString();
-                        lastXanela.setTextField(buttonId,text);
+                        lastSnapshot.setTextField(buttonId,text);
                         packer.write((int)0);
                         packer.writeNil();
                     }  else if (methodName.equals("clickCell")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int componentId = unpacker.readInt();
                         int rowId = unpacker.readInt();
                         int columnId = unpacker.readInt();
-                        lastXanela.clickCell(componentId,rowId,columnId);
+                        lastSnapshot.clickCell(componentId,rowId,columnId);
                         packer.write((int)0);
                         packer.writeNil();
                     }  else if (methodName.equals("doubleClickCell")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int componentId = unpacker.readInt();
                         int rowId = unpacker.readInt();
                         int columnId = unpacker.readInt();
-                        lastXanela.doubleClickCell(componentId,rowId,columnId);
+                        lastSnapshot.doubleClickCell(componentId,rowId,columnId);
                         packer.write((int)0);
                         packer.writeNil();
                     } else if (methodName.equals("expandCollapseCell")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int componentId = unpacker.readInt();
                         int rowId = unpacker.readInt();
                         boolean expand = unpacker.readBoolean();
-                        lastXanela.expandCollapseCell(componentId,rowId,expand);
+                        lastSnapshot.expandCollapseCell(componentId,rowId,expand);
                         packer.write((int)0);
                         packer.writeNil();
                     }  else if (methodName.equals("selectTab")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int componentId = unpacker.readInt();
                         int tabid = unpacker.readInt();
-                        lastXanela.selectTab(componentId,tabid);
+                        lastSnapshot.selectTab(componentId,tabid);
                         packer.write((int)0);
                         packer.writeNil();
                     }  else if (methodName.equals("getWindowImage")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int windowId = unpacker.readInt();
-                        BufferedImage image = lastXanela.getWindowImage(windowId);
+                        BufferedImage image = lastSnapshot.getWindowImage(windowId);
                         imageBuffer.reset();
                         ImageIO.write(image, "png", imageBuffer);
                         packer.write((int)0);
                         packer.write(imageBuffer.toByteArray());
                     } else if (methodName.equals("closeWindow")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int windowId = unpacker.readInt();
-                        lastXanela.closeWindow(windowId);
+                        lastSnapshot.closeWindow(windowId);
                         packer.write((int)0);
                         packer.writeNil();
                     } else if (methodName.equals("escape")) {
-                        int xanelaId = unpacker.readInt();
+                        int snapshotId = unpacker.readInt();
                         int windowId = unpacker.readInt();
-                        lastXanela.escape(windowId);
+                        lastSnapshot.escape(windowId);
                         packer.write((int)0);
                         packer.writeNil();
                     } else if (methodName.equals("shutdown")) {
